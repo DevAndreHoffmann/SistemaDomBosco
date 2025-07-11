@@ -200,7 +200,7 @@ export function saveInternChanges() {
         }
         
         intern.changeHistory.push({
-            id: db.nextChangeId++, // Reuse nextChangeId for both clients and users
+            id: db.nextChangeId, // Reuse nextChangeId for both clients and users
             date: new Date().toISOString(),
             changedBy: getCurrentUser().name,
             changes: changes
@@ -247,7 +247,7 @@ export function deleteIntern(internId) {
             // Add change history for client
             if (!client.changeHistory) client.changeHistory = [];
             client.changeHistory.push({
-                id: db.nextChangeId++,
+                id: db.nextChangeId,
                 date: new Date().toISOString(),
                 changedBy: getCurrentUser().name,
                 changes: [{
@@ -273,7 +273,7 @@ export function addIntern(internData) {
     }
 
     const newIntern = {
-        id: db.nextUserId++, // Use nextUserId for new users
+        id: db.nextUserId, // Use nextUserId for new users
         role: 'intern', // Always 'intern' for this function
         changeHistory: [], // Initialize change history
         ...internData

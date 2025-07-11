@@ -187,10 +187,14 @@ function setupEditClientModal() {
         editButton.addEventListener('click', showEditClientModal);
     }
     
-    document.getElementById('form-editar-cliente').addEventListener('submit', (e) => {
-        e.preventDefault();
-        saveClientChanges();
-    });
+    // Check if the form exists before adding event listener
+    const editForm = document.getElementById('form-editar-cliente');
+    if (editForm) {
+        editForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveClientChanges();
+        });
+    }
 }
 
 function showEditClientModal() {
@@ -417,12 +421,9 @@ function saveClientChanges() {
     });
 
     if (changes.length > 0) {
-        if (!client.changeHistory) {
-            client.changeHistory = [];
-        }
-        
+        if (!client.changeHistory) client.changeHistory = [];
         client.changeHistory.push({
-            id: db.nextChangeId++,
+            id: db.nextChangeId,
             date: new Date().toISOString(),
             changedBy: getCurrentUser().name,
             changes: changes

@@ -427,7 +427,7 @@ export function saveReassignedSchedule() {
             // Add a change history entry for the client's intern assignment
             if (!client.changeHistory) client.changeHistory = [];
             client.changeHistory.push({
-                id: db.nextChangeId++,
+                id: db.nextChangeId,
                 date: new Date().toISOString(),
                 changedBy: getCurrentUser().name,
                 changes: [

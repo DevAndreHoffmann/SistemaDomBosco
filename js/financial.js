@@ -322,7 +322,7 @@ export function addDailyNote() {
     }
     
     const newNote = {
-        id: db.nextDailyNoteId++,
+        id: db.nextDailyNoteId,
         date: date,
         title: title,
         type: type,

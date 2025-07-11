@@ -339,13 +339,16 @@ export function addClientNote() {
         client.notes = [];
     }
 
-    client.notes.push({
-        id: db.nextNoteId++,
+    const newNote = {
+        id: db.nextNoteId,
+        clientId: client.id,
         title: title,
         content: content,
         date: new Date().toISOString(),
         author: getCurrentUser().name
-    });
+    };
+
+    client.notes.push(newNote);
 
     saveDb();
     document.getElementById('modal-add-note').style.display = 'none';
@@ -381,8 +384,9 @@ export function addClientDocument() {
             client.documents = [];
         }
 
-        client.documents.push({
-            id: db.nextDocumentId++,
+        const newDocument = {
+            id: db.nextDocumentId,
+            clientId: client.id,
             title: title,
             type: type,
             description: description,
@@ -390,7 +394,9 @@ export function addClientDocument() {
             fileData: e.target.result,
             uploadDate: new Date().toISOString(),
             uploadedBy: getCurrentUser().name
-        });
+        };
+
+        client.documents.push(newDocument);
 
         saveDb();
         document.getElementById('modal-add-document').style.display = 'none';
@@ -857,7 +863,7 @@ export function assignInternToClient() {
     // Add change history
     if (!client.changeHistory) client.changeHistory = [];
     client.changeHistory.push({
-        id: db.nextChangeId++,
+        id: db.nextChangeId,
         date: new Date().toISOString(),
         changedBy: getCurrentUser().name,
         changes: [{
@@ -896,12 +902,12 @@ export function unassignInternFromClient() {
     // Add change history
     if (!client.changeHistory) client.changeHistory = [];
     client.changeHistory.push({
-        id: db.nextChangeId++,
+        id: db.nextChangeId,
         date: new Date().toISOString(),
         changedBy: getCurrentUser().name,
         changes: [{
             field: 'Estagiário Vinculado',
-            oldValue: oldAssignedInternName,
+            oldValue: oldAssignedInternName || 'Nenhum',
             newValue: 'Nenhum'
         }]
     });

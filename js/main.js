@@ -447,7 +447,7 @@ function setupEventListeners() {
                     const itemToDelete = db.stockItems[itemIndex];
                      // Add a movement record for deletion
                     db.stockMovements.push({
-                        id: db.nextMovementId++,
+                        id: db.nextMovementId,
                         itemId: itemToDelete.id, // Keep ID for historical reference
                         itemName: itemToDelete.name, // Store name in case item is fully removed
                         type: 'exclusao',
@@ -731,7 +731,7 @@ async function saveNewSchedule() {
     }
 
     const newSchedule = {
-        id: db.nextScheduleId++,
+        id: db.nextScheduleId,
         clientId: clientId,
         date: date,
         time: time,
@@ -757,7 +757,7 @@ async function saveNewSchedule() {
                 // Add a change history entry for the client's intern assignment
                 if (!client.changeHistory) client.changeHistory = [];
                 client.changeHistory.push({
-                    id: db.nextChangeId++,
+                    id: db.nextChangeId,
                     date: new Date().toISOString(),
                     changedBy: getCurrentUser().name,
                     changes: [
@@ -884,7 +884,7 @@ function saveNewAttendance() {
     }
 
     const newAppointment = {
-        id: db.nextAppointmentId++,
+        id: db.nextAppointmentId,
         date: date,
         anamnesisTypeId: anamnesisTypeId,
         notes: notes,
@@ -1041,7 +1041,7 @@ function saveAttendanceConfirmation() {
                     
                     // Add stock movement
                     db.stockMovements.push({
-                        id: db.nextMovementId++,
+                        id: db.nextMovementId,
                         itemId: itemId,
                         type: 'saida',
                         quantity: quantity,
@@ -1083,7 +1083,7 @@ function saveAttendanceConfirmation() {
     }
 
     const newAppointment = {
-        id: db.nextAppointmentId++,
+        id: db.nextAppointmentId,
         date: schedule.date,
         time: schedule.time,
         serviceType: schedule.serviceType,
@@ -1196,7 +1196,7 @@ function addStockItem() {
     }
 
     const newItem = {
-        id: db.nextStockItemId++,
+        id: db.nextStockItemId,
         name: name,
         category: category,
         quantity: quantity,
@@ -1212,7 +1212,7 @@ function addStockItem() {
     
     // Add stock movement
     db.stockMovements.push({
-        id: db.nextMovementId++,
+        id: db.nextMovementId,
         itemId: newItem.id,
         type: 'entrada',
         quantity: quantity,
@@ -1264,7 +1264,7 @@ function processStockAdjustment() {
     
     // Add stock movement
     db.stockMovements.push({
-        id: db.nextMovementId++,
+        id: db.nextMovementId,
         itemId: itemId,
         type: action === 'add' ? 'entrada' : 'saida',
         quantity: quantity,
@@ -1430,7 +1430,7 @@ function addGeneralDocument() {
         }
 
         const newDocument = {
-            id: db.nextGeneralDocumentId++,
+            id: db.nextGeneralDocumentId,
             title: title,
             type: type,
             description: description,
@@ -1472,7 +1472,7 @@ function addGeneralNote() {
     }
 
     const newNote = {
-        id: db.nextGeneralDocumentId++,
+        id: db.nextGeneralDocumentId,
         title: title,
         type: type,
         content: content,

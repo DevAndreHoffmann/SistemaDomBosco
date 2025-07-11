@@ -1529,16 +1529,24 @@ export const db = {
     get stockMovements() { return cache.stockMovements; },
     
     // IDs simulados para compatibilidade
-    get nextClientId() { return Math.max(...cache.clients.map(c => c.id), 0) + 1; },
-    get nextAppointmentId() { return Math.max(...cache.appointments.map(a => a.id), 0) + 1; },
-    get nextScheduleId() { return Math.max(...cache.schedules.map(s => s.id), 0) + 1; },
-    get nextNoteId() { return Math.max(...cache.dailyNotes.map(n => n.id), 0) + 1; },
-    get nextDocumentId() { return Math.max(...cache.generalDocuments.map(d => d.id), 0) + 1; },
-    get nextUserId() { return Math.max(...cache.users.map(u => u.id), 0) + 1; },
-    get nextStockItemId() { return Math.max(...cache.stockItems.map(i => i.id), 0) + 1; },
-    get nextMovementId() { return Math.max(...cache.stockMovements.map(m => m.id), 0) + 1; },
-    get nextDailyNoteId() { return Math.max(...cache.dailyNotes.map(n => n.id), 0) + 1; },
-    get nextGeneralDocumentId() { return Math.max(...cache.generalDocuments.map(d => d.id), 0) + 1; },
+    get nextClientId() { return cache.clients.length > 0 ? Math.max(...cache.clients.map(c => c.id), 0) + 1 : 1; },
+    get nextAppointmentId() { return cache.appointments.length > 0 ? Math.max(...cache.appointments.map(a => a.id), 0) + 1 : 1; },
+    get nextScheduleId() { return cache.schedules.length > 0 ? Math.max(...cache.schedules.map(s => s.id), 0) + 1 : 1; },
+    get nextNoteId() { 
+        // Calcular ID baseado em todas as notas dos clientes
+        const allNotes = cache.clients.flatMap(client => client.notes || []);
+        return allNotes.length > 0 ? Math.max(...allNotes.map(n => n.id), 0) + 1 : 1;
+    },
+    get nextDocumentId() { 
+        // Calcular ID baseado em todos os documentos dos clientes
+        const allDocuments = cache.clients.flatMap(client => client.documents || []);
+        return allDocuments.length > 0 ? Math.max(...allDocuments.map(d => d.id), 0) + 1 : 1;
+    },
+    get nextUserId() { return cache.users.length > 0 ? Math.max(...cache.users.map(u => u.id), 0) + 1 : 1; },
+    get nextStockItemId() { return cache.stockItems.length > 0 ? Math.max(...cache.stockItems.map(i => i.id), 0) + 1 : 1; },
+    get nextMovementId() { return cache.stockMovements.length > 0 ? Math.max(...cache.stockMovements.map(m => m.id), 0) + 1 : 1; },
+    get nextDailyNoteId() { return cache.dailyNotes.length > 0 ? Math.max(...cache.dailyNotes.map(n => n.id), 0) + 1 : 1; },
+    get nextGeneralDocumentId() { return cache.generalDocuments.length > 0 ? Math.max(...cache.generalDocuments.map(d => d.id), 0) + 1 : 1; },
     get nextChangeId() { return 1; } // Não mais usado
 };
 
