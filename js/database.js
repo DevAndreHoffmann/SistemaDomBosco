@@ -850,9 +850,8 @@ export const dailyNotes = {
                 ...noteData,
                 date: convertDateToString(noteData.date),
                 // Mapeamento correto dos campos
-                note_type: noteData.note_type || noteData.noteType,
-                created_at: noteData.created_at || noteData.createdAt || new Date().toISOString(),
-                created_by: noteData.created_by || noteData.createdBy
+                type: noteData.type || noteData.noteType,
+                created_at: noteData.created_at || noteData.createdAt || new Date().toISOString()
             };
             
             // Remover campos que podem não existir no schema

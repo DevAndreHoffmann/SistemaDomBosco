@@ -300,25 +300,22 @@ export function renderDailyNotes(selectedPeriod = 'current-month') {
 
 export async function addDailyNote() {
     const date = document.getElementById('daily-note-date').value;
-    const category = document.getElementById('daily-note-category').value;
     const title = document.getElementById('daily-note-title').value.trim();
     const content = document.getElementById('daily-note-content').value.trim();
     const value = parseFloat(document.getElementById('daily-note-value').value) || 0;
     const noteType = document.getElementById('daily-note-type').value;
 
-    if (!date || !category || !title || !content) {
+    if (!date || !title || !content || !noteType) {
         showNotification('Por favor, preencha todos os campos obrigatórios.', 'warning');
         return;
     }
 
     const newNote = {
         date: date,
-        category: category,
         title: title,
         content: content,
         value: value,
-        note_type: noteType,
-        created_by: getCurrentUser().name,
+        type: noteType, // Usar 'type' ao invés de 'note_type'
         created_at: new Date().toISOString()
     };
 
