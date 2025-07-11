@@ -90,10 +90,14 @@ export function renderSchedule(selectedDate = null) {
             `;
         }
         
+        // CORRIGIDO: Campo correto é 'professional'
+        const serviceDisplay = schedule.professional || schedule.service_type || schedule.serviceType || 'Não especificado';
+        const serviceName = serviceNames[serviceDisplay] || serviceDisplay;
+        
         card.innerHTML = `
             <div class="schedule-info">
                 <h4>${schedule.time} - ${client ? `${client.name} (ID: ${client.id})` : 'Cliente não encontrado'}</h4>
-                <p><strong>Serviço:</strong> ${serviceNames[schedule.service_type || schedule.serviceType] || schedule.service_type || schedule.serviceType}</p>
+                <p><strong>Serviço:</strong> ${serviceName}</p>
                 <p><strong>Status:</strong> ${schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}</p>
                 ${(schedule.assigned_to_user_name || schedule.assignedToUserName) ? `<p><strong>Atribuído a:</strong> ${schedule.assigned_to_user_name || schedule.assignedToUserName}</p>` : '<p><strong>Atribuído a:</strong> Não atribuído</p>'}
                 ${schedule.observations ? `<p><strong>Obs:</strong> ${schedule.observations}</p>` : ''}
@@ -200,7 +204,8 @@ export function editSchedule(scheduleId) {
     document.getElementById('edit-cliente-agenda').value = schedule.client_id || schedule.clientId;
     document.getElementById('edit-data-agendamento').value = schedule.date;
     document.getElementById('edit-hora-agendamento').value = schedule.time;
-    document.getElementById('edit-tipo-servico').value = schedule.service_type || schedule.serviceType;
+    // CORRETO: Campo é 'professional'
+    document.getElementById('edit-tipo-servico').value = schedule.professional || schedule.service_type || schedule.serviceType;
     document.getElementById('edit-observacoes-agendamento').value = schedule.observations || '';
     
     document.getElementById('modal-editar-agendamento').style.display = 'flex';
@@ -254,7 +259,9 @@ export async function saveEditedSchedule() {
         client_id: clientId,
         date: date,
         time: time,
-        service_type: serviceType,
+        // CORRETO: Campo é 'professional'
+        professional: serviceType,
+        service_type: serviceType, // Mantemos para compatibilidade
         observations: observations
     };
 

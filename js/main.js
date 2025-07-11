@@ -109,10 +109,8 @@ function initializeApp() {
     initializeCalendar();
     renderClientList();
     
-    // DEBUG: Verificar schema de TODAS as tabelas
-    import('./database.js').then(({ debugAllSchemas }) => {
-        debugAllSchemas();
-    });
+    // Debug removido - não é mais necessário executar automaticamente
+    // Use Ctrl+Shift+D se precisar debugar schemas
     
     const currentUser = getCurrentUser();
     if (currentUser.role === 'coordinator') {
@@ -752,15 +750,16 @@ async function saveNewSchedule() {
         client_id: clientId,
         date: date,
         time: time,
-        // TEMPORARIAMENTE REMOVIDO: service_type: serviceType,
+        // CORRETO: Campo é 'professional' não 'service_type'
+        professional: serviceType,
+        service_type: serviceType, // Mantemos para compatibilidade no mapeamento
         observations: observations,
         status: 'agendado',
         assigned_to_user_id: assignedToUserId,
         assigned_to_user_name: assignedToUserName
     };
 
-    console.log('📋 Tentando criar agendamento:', newSchedule);
-    console.log('🎯 Tipo de serviço selecionado (não enviado):', serviceType);
+    console.log('📋 Criando agendamento com campo correto:', newSchedule);
 
     // Usar Supabase para salvar
     const { schedules } = await import('./database.js');
@@ -786,7 +785,7 @@ async function saveNewSchedule() {
         renderSchedule(document.getElementById('date-selector').value);
         renderCalendar();
         
-        showNotification('Agendamento criado com sucesso! (Tipo de serviço será adicionado após descobrirmos o campo correto)', 'success');
+        showNotification('Agendamento criado com sucesso!', 'success');
 
         // Enviar email se solicitado
         if (sendEmail) {

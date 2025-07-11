@@ -661,18 +661,23 @@ export const schedules = {
         try {
             setLoading('schedules.create', true);
             
+            // Campos CORRETOS baseados no schema real
             const processedData = {
                 client_id: scheduleData.client_id || scheduleData.clientId,
                 date: convertDateToString(scheduleData.date),
                 time: convertTimeToString(scheduleData.time),
                 status: scheduleData.status || 'agendado',
                 observations: scheduleData.observations,
+                // CORRETO: É 'professional' não 'service_type'!
+                professional: scheduleData.service_type || scheduleData.serviceType || scheduleData.professional,
+                anamnesis_type: scheduleData.anamnesis_type || scheduleData.anamnesisType,
+                cancellation_reason: scheduleData.cancellation_reason || scheduleData.cancellationReason,
+                cancellation_image: scheduleData.cancellation_image || scheduleData.cancellationImage,
                 assigned_to_user_id: scheduleData.assigned_to_user_id || scheduleData.assignedToUserId,
                 assigned_to_user_name: scheduleData.assigned_to_user_name || scheduleData.assignedToUserName
-                // REMOVIDO: service_type até descobrirmos o nome correto
             };
             
-            console.log('Tentando inserir agendamento sem service_type:', processedData);
+            console.log('✅ Inserindo agendamento com campos corretos:', processedData);
             
             const { data, error } = await supabase
                 .from('schedules')
@@ -681,12 +686,11 @@ export const schedules = {
                 .single();
             
             if (error) {
-                console.error('Erro detalhado:', error);
+                console.error('❌ Erro ao inserir agendamento:', error);
                 throw error;
             }
             
-            console.log('Agendamento criado com sucesso:', data);
-            console.log('Campos disponíveis no registro criado:', Object.keys(data));
+            console.log('✅ Agendamento criado com sucesso:', data);
             
             // Atualizar cache
             cache.schedules.push(data);
@@ -703,15 +707,20 @@ export const schedules = {
         try {
             setLoading('schedules.update', true);
             
+            // Campos CORRETOS baseados no schema real
             const processedData = {
                 client_id: scheduleData.client_id || scheduleData.clientId,
                 date: convertDateToString(scheduleData.date),
                 time: convertTimeToString(scheduleData.time),
                 status: scheduleData.status,
                 observations: scheduleData.observations,
+                // CORRETO: É 'professional' não 'service_type'!
+                professional: scheduleData.service_type || scheduleData.serviceType || scheduleData.professional,
+                anamnesis_type: scheduleData.anamnesis_type || scheduleData.anamnesisType,
+                cancellation_reason: scheduleData.cancellation_reason || scheduleData.cancellationReason,
+                cancellation_image: scheduleData.cancellation_image || scheduleData.cancellationImage,
                 assigned_to_user_id: scheduleData.assigned_to_user_id || scheduleData.assignedToUserId,
                 assigned_to_user_name: scheduleData.assigned_to_user_name || scheduleData.assignedToUserName
-                // REMOVIDO: service_type até descobrirmos o nome correto
             };
             
             const { data, error } = await supabase
@@ -1919,7 +1928,7 @@ async function debugTableSchema(tableName) {
 async function debugEmptyTable(tableName) {
     console.log(`🧪 Testando inserção mínima em ${tableName}...`);
     
-    // Dados de teste básicos para cada tabela (versão melhorada)
+    // Dados de teste corrigidos baseados nos schemas reais
     const testData = {
         users: {
             role: 'intern',
@@ -1939,18 +1948,17 @@ async function debugEmptyTable(tableName) {
             status: 'agendado'
         },
         appointments: {
+            // Removido 'notes' que não existe - testando campos básicos
             client_id: 1,
             date: '2024-01-01',
-            time: '10:00',
-            notes: 'Teste'
+            time: '10:00'
         },
         daily_notes: {
+            // Removido 'category' que não existe - testando campos básicos  
             date: '2024-01-01',
-            category: 'receita',
             title: 'Teste ' + Date.now(),
             content: 'Conteúdo teste',
-            value: 100,
-            created_by: 'Admin'
+            value: 100
         },
         general_documents: {
             title: 'Documento Teste ' + Date.now(),
@@ -1967,25 +1975,23 @@ async function debugEmptyTable(tableName) {
             unit: 'unidade'
         },
         stock_movements: {
+            // Removido 'created_by' que não existe - testando campos básicos
             stock_item_id: 1,
             type: 'entrada',
             quantity: 5,
             reason: 'Teste',
-            date: '2024-01-01',
-            created_by: 'Admin'
+            date: '2024-01-01'
         },
         client_notes: {
+            // Removido 'created_by' que não existe - testando campos básicos
             client_id: 1,
             title: 'Nota Teste ' + Date.now(),
-            content: 'Conteúdo teste',
-            created_by: 'Admin'
+            content: 'Conteúdo teste'
         },
         client_documents: {
+            // Removido 'file_data' que não existe - testando apenas campos básicos
             client_id: 1,
-            title: 'Documento Teste ' + Date.now(),
-            // Testando diferentes nomes para o campo arquivo
-            filename: 'teste.pdf',
-            file_data: 'data:text/plain;base64,dGVzdGU='
+            title: 'Documento Teste ' + Date.now()
         }
     };
     
@@ -1995,7 +2001,7 @@ async function debugEmptyTable(tableName) {
         return;
     }
     
-    console.log(`📋 DADOS DE TESTE:`);
+    console.log(`📋 DADOS DE TESTE CORRIGIDOS:`);
     Object.keys(data).forEach(campo => {
         console.log(`   ${campo}: ${typeof data[campo]} = ${data[campo]}`);
     });
@@ -2013,8 +2019,8 @@ async function debugEmptyTable(tableName) {
         console.error(`   Dica:`, insertError.hint);
         
         // Tentar descobrir campos corretos testando variações
-        if (tableName === 'client_documents' && insertError.message.includes('file_name')) {
-            console.log('🔧 Testando nomes alternativos para arquivo...');
+        if (tableName === 'client_documents') {
+            console.log('🔧 Testando campos para client_documents...');
             await testClientDocumentsFields();
         }
         
@@ -2038,22 +2044,20 @@ async function debugEmptyTable(tableName) {
 // Função específica para testar campos de client_documents
 async function testClientDocumentsFields() {
     const variations = [
-        { filename: 'teste.pdf' },
-        { file_name: 'teste.pdf' },
-        { name: 'teste.pdf' },
-        { document_name: 'teste.pdf' },
-        { title: 'Documento', filename: 'teste.pdf' },
-        { title: 'Documento', name: 'teste.pdf' }
+        { title: 'Doc 1' },
+        { title: 'Doc 2', description: 'Teste' },
+        { title: 'Doc 3', content: 'Conteúdo' },
+        { title: 'Doc 4', file_url: 'http://example.com/file.pdf' },
+        { title: 'Doc 5', type: 'document' }
     ];
     
     for (const variation of variations) {
         const testData = {
             client_id: 1,
-            title: 'Teste ' + Date.now(),
             ...variation
         };
         
-        console.log('🧪 Testando variação:', variation);
+        console.log('🧪 Testando client_documents com:', variation);
         
         const { data, error } = await supabase
             .from('client_documents')
@@ -2061,12 +2065,13 @@ async function testClientDocumentsFields() {
             .select();
         
         if (!error && data) {
-            console.log('✅ SUCESSO com:', variation);
-            console.log('📋 Campos retornados:', Object.keys(data[0]));
+            console.log('✅ SUCESSO client_documents com:', variation);
+            console.log('📋 Campos retornados:', Object.keys(data[0]).join(', '));
+            console.log('📄 Registro:', data[0]);
             await supabase.from('client_documents').delete().eq('id', data[0].id);
             break;
         } else {
-            console.log('❌ Falhou com:', variation, error.message);
+            console.log('❌ Falhou client_documents:', variation, error.message);
         }
     }
 }
