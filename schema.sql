@@ -311,7 +311,7 @@ INSERT INTO users (id, username, password, name, role, address, institution, gra
     (13, 'luiz', 'intern123', 'Luiz', 'intern', 'Alameda I, 606', 'Universidade Federal', '5º Semestre', 'Psicologia', 'Avaliação Psicológica', '(21) 99999-9999', 'luiz@example.com', '999.000.111-22', '[]'),
     (14, 'pedro', 'intern123', 'Pedro', 'intern', 'Rua J, 707', 'Centro Universitário', '7º Semestre', 'Psicologia', 'Neuropsicologia Adulto', '(21) 90000-0000', 'pedro@example.com', '000.111.222-33', '[]'),
     (15, 'pedro_alexandre', 'intern123', 'Pedro Alexandre Carneiro', 'intern', 'Rua Perdoes 781', 'PUC Minas coração eucarístico', '4°', 'Psicologia', 'Neuropsicologia Adulto', '(31)992384630', 'pedrinalex@gmail.com', '018.582.366-14', '[]'),
-    (16, 'wallisson', 'intern123', 'Wallisson Henrique Santos', 'intern', 'Rua Higienópolis, 137, Piratininga. Ibirité', 'Pós graduação - Fumec', 'N/A', 'Psicólogo', 'N/A', '99889-7105 / 98693-3477', 'wallissonpsicologo@gmail.com', '011.922.196-12', '[]'),
+    (16, 'wallisson', 'intern123', 'Wallisson Henrique Santos', 'intern', 'Rua Higienópolis, 137, Piratininga. Ibirité', 'Pós graduação - Fumec', 'N/A', 'Psicólogo', 'N/A', '99889-7105/98693-34', 'wallissonpsicologo@gmail.com', '011.922.196-12', '[]'),
     (20, 'renata_cantagalli', 'intern123', 'Renata Grichtolik Cantagalli Paiva', 'intern', 'Rua Bibliotecários, Bairro Alipio de Melo, BH/MG - 30840-070', 'IESLA', 'Pós-Graduação / último semestre', '08/2025', 'N/A', '(31) 98598-7608', 'renatacantagalli@gmail.com', '06050524688', '[]');
 
 -- Alterar sequência para próximos IDs
