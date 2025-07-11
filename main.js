@@ -1110,7 +1110,7 @@ function addMaterialSelection(modalType = 'default') {
     container.appendChild(selectionDiv);
 }
 
-function addStockItem() {
+async function addStockItem() {
     const name = document.getElementById('stock-item-name').value.trim();
     const category = document.getElementById('stock-item-category').value;
     const quantity = parseInt(document.getElementById('stock-item-quantity').value);
@@ -1124,97 +1124,106 @@ function addStockItem() {
     }
 
     const newItem = {
-        id: db.nextStockItemId,
         name: name,
         category: category,
         quantity: quantity,
-        minStock: minStock,
-        unit: 'unidade', // Always store as 'unidade'
-        unitValue: unitValue, // Store unit value
+        min_stock: minStock,
+        unit: 'unidade',
+        unit_value: unitValue,
         description: description,
-        createdAt: new Date().toISOString(),
-        createdBy: getCurrentUser().name
+        created_at: new Date().toISOString()
     };
 
-    db.stockItems.push(newItem);
+    // Usar Supabase para salvar item
+    const { stockItems, stockMovements } = await import('./js/database.js');
+    const savedItem = await stockItems.create(newItem);
     
-    // Add stock movement
-    db.stockMovements.push({
-        id: db.nextMovementId,
-        itemId: newItem.id,
-        type: 'entrada',
-        quantity: quantity,
-        reason: 'Adição inicial de estoque',
-        date: new Date().toISOString(),
-        user: getCurrentUser().name,
-        itemUnitValue: newItem.unitValue // Record the unit value at time of movement
-    });
+    if (savedItem) {
+        // Criar movimento de estoque inicial
+        const newMovement = {
+            item_id: savedItem.id,
+            type: 'entrada',
+            quantity: quantity,
+            reason: 'Adição inicial de estoque',
+            item_unit_value: unitValue
+        };
 
-    saveDb();
-    
-    document.getElementById('form-add-stock').reset();
-    document.getElementById('modal-add-stock').style.display = 'none';
-    
-    renderStockList();
-    renderStockMovements();
-    updateStockSummary();
-    // Refresh financial report with current selected period
-    const selectedPeriod = document.getElementById('financial-period-selector').value;
-    renderFinancialReport(selectedPeriod);
-    
-    showNotification('Item adicionado ao estoque com sucesso!', 'success');
+        await stockMovements.create(newMovement);
+        
+        document.getElementById('form-add-stock').reset();
+        document.getElementById('modal-add-stock').style.display = 'none';
+        
+        renderStockList();
+        renderStockMovements();
+        updateStockSummary();
+        
+        // Atualizar relatório financeiro
+        const selectedPeriod = document.getElementById('financial-period-selector').value;
+        renderFinancialReport(selectedPeriod);
+        
+        showNotification('Item adicionado ao estoque com sucesso!', 'success');
+    } else {
+        showNotification('Erro ao adicionar item ao estoque. Tente novamente.', 'error');
+    }
 }
 
-function processStockAdjustment() {
+async function processStockAdjustment() {
     const { itemId, action } = window.currentStockAdjustment;
     const item = db.stockItems.find(item => item.id === itemId);
     if (!item) return;
     
     const quantity = parseInt(document.getElementById('adjust-stock-quantity').value);
     const reason = document.getElementById('adjust-stock-reason').value.trim();
-    
+
     if (!quantity || quantity <= 0 || !reason) {
         showNotification('Por favor, preencha todos os campos corretamente.', 'warning');
         return;
     }
-    
-    // Check stock availability for removal (quantity is already in the correct unit)
-    if (action === 'remove' && item.quantity < quantity) {
-        showNotification(`Quantidade insuficiente em estoque. Disponível: ${item.quantity} unidades.`, 'error');
-        return;
-    }
-    
+
+    let newQuantity;
     if (action === 'add') {
-        item.quantity += quantity;
+        newQuantity = item.quantity + quantity;
     } else {
-        item.quantity -= quantity;
+        if (item.quantity < quantity) {
+            showNotification('Quantidade insuficiente em estoque.', 'error');
+            return;
+        }
+        newQuantity = item.quantity - quantity;
     }
+
+    // Usar Supabase para atualizar e criar movimento
+    const { stockItems, stockMovements } = await import('./js/database.js');
     
-    // Add stock movement
-    db.stockMovements.push({
-        id: db.nextMovementId,
-        itemId: itemId,
-        type: action === 'add' ? 'entrada' : 'saida',
-        quantity: quantity,
-        reason: reason,
-        date: new Date().toISOString(),
-        user: getCurrentUser().name,
-        itemUnitValue: item.unitValue // Record the unit value at time of movement
-    });
+    // Atualizar item
+    const updatedItem = await stockItems.update(itemId, { quantity: newQuantity });
     
-    saveDb();
-    
-    // Close modal and refresh views
-    document.getElementById('modal-adjust-stock').style.display = 'none';
-    renderStockList();
-    renderStockMovements();
-    updateStockSummary();
-    // Refresh financial report with current selected period
-    const selectedPeriod = document.getElementById('financial-period-selector').value;
-    renderFinancialReport(selectedPeriod);
-    
-    const actionText = action === 'add' ? 'adicionado ao' : 'removido do';
-    showNotification(`${quantity} unidades ${actionText} estoque com sucesso!`, 'success');
+    if (updatedItem) {
+        // Criar movimento de estoque
+        const newMovement = {
+            item_id: itemId,
+            type: action === 'add' ? 'entrada' : 'saida',
+            quantity: quantity,
+            reason: reason,
+            item_unit_value: item.unit_value || item.unitValue
+        };
+
+        await stockMovements.create(newMovement);
+        
+        // Fechar modal e atualizar views
+        document.getElementById('modal-adjust-stock').style.display = 'none';
+        renderStockList();
+        renderStockMovements();
+        updateStockSummary();
+        
+        // Atualizar relatório financeiro
+        const selectedPeriod = document.getElementById('financial-period-selector').value;
+        renderFinancialReport(selectedPeriod);
+        
+        const actionText = action === 'add' ? 'adicionado ao' : 'removido do';
+        showNotification(`${quantity} unidades ${actionText} estoque com sucesso!`, 'success');
+    } else {
+        showNotification('Erro ao ajustar estoque. Tente novamente.', 'error');
+    }
 }
 
 function addNewIntern() {
