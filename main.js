@@ -1135,7 +1135,7 @@ async function addStockItem() {
     };
 
     // Usar Supabase para salvar item
-    const { stockItems, stockMovements } = await import('./js/database.js');
+    const { stockItems, stockMovements, syncCache } = await import('./js/database.js');
     const savedItem = await stockItems.create(newItem);
     
     if (savedItem) {
@@ -1149,6 +1149,9 @@ async function addStockItem() {
         };
 
         await stockMovements.create(newMovement);
+        
+        // Sincronizar cache para garantir que os dados sejam atualizados
+        await syncCache();
         
         document.getElementById('form-add-stock').reset();
         document.getElementById('modal-add-stock').style.display = 'none';
@@ -1192,7 +1195,7 @@ async function processStockAdjustment() {
     }
 
     // Usar Supabase para atualizar e criar movimento
-    const { stockItems, stockMovements } = await import('./js/database.js');
+    const { stockItems, stockMovements, syncCache } = await import('./js/database.js');
     
     // Atualizar item
     const updatedItem = await stockItems.update(itemId, { quantity: newQuantity });
@@ -1208,6 +1211,9 @@ async function processStockAdjustment() {
         };
 
         await stockMovements.create(newMovement);
+        
+        // Sincronizar cache para garantir que os dados sejam atualizados
+        await syncCache();
         
         // Fechar modal e atualizar views
         document.getElementById('modal-adjust-stock').style.display = 'none';
