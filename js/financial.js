@@ -298,84 +298,45 @@ export function renderDailyNotes(selectedPeriod = 'current-month') {
     });
 }
 
-export function addDailyNote() {
+export async function addDailyNote() {
     const date = document.getElementById('daily-note-date').value;
+    const category = document.getElementById('daily-note-category').value;
     const title = document.getElementById('daily-note-title').value.trim();
-    const type = document.getElementById('daily-note-type').value;
-    const valueInput = document.getElementById('daily-note-value').value;
-    const value = valueInput ? parseFloat(valueInput) : null; // Handle optional value
     const content = document.getElementById('daily-note-content').value.trim();
-    const fileInput = document.getElementById('daily-note-file');
-    
-    if (!date || !title || !type || !content) {
+    const value = parseFloat(document.getElementById('daily-note-value').value) || 0;
+    const noteType = document.getElementById('daily-note-type').value;
+
+    if (!date || !category || !title || !content) {
         showNotification('Por favor, preencha todos os campos obrigatórios.', 'warning');
         return;
     }
 
-    if (value !== null && isNaN(value)) {
-        showNotification('O valor deve ser um número válido.', 'warning');
-        return;
-    }
-    
-    if (!db.dailyNotes) {
-        db.dailyNotes = [];
-    }
-    
     const newNote = {
-        id: db.nextDailyNoteId,
         date: date,
+        category: category,
         title: title,
-        type: type,
-        value: value,
         content: content,
-        createdAt: new Date().toISOString(),
-        createdBy: getCurrentUser().name
+        value: value,
+        note_type: noteType,
+        created_by: getCurrentUser().name,
+        created_at: new Date().toISOString()
     };
 
-    if (fileInput.files[0]) {
-        const file = fileInput.files[0];
-        
-        // Check file size (5MB limit)
-        if (file.size > 5 * 1024 * 1024) {
-            showNotification('O arquivo deve ter no máximo 5MB.', 'error');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            newNote.fileName = file.name;
-            newNote.fileData = e.target.result;
-            
-            db.dailyNotes.push(newNote);
-            saveDb();
-            
-            document.getElementById('form-add-daily-note').reset();
-            document.getElementById('modal-add-daily-note').style.display = 'none';
-            
-            const selectedPeriod = document.getElementById('financial-period-selector').value;
-            renderDailyNotes(selectedPeriod);
-            renderFinancialReport(selectedPeriod);
-            
-            showNotification('Nota diária adicionada com sucesso!', 'success');
-        };
-
-        reader.onerror = function() {
-            showNotification('Erro ao processar o arquivo. Tente novamente.', 'error');
-        };
-
-        reader.readAsDataURL(file);
-    } else {
-        db.dailyNotes.push(newNote);
-        saveDb();
-        
+    // Usar Supabase para salvar
+    const { dailyNotes } = await import('./database.js');
+    const savedNote = await dailyNotes.create(newNote);
+    
+    if (savedNote) {
         document.getElementById('form-add-daily-note').reset();
         document.getElementById('modal-add-daily-note').style.display = 'none';
         
+        // Atualizar o relatório financeiro
         const selectedPeriod = document.getElementById('financial-period-selector').value;
-        renderDailyNotes(selectedPeriod);
         renderFinancialReport(selectedPeriod);
         
-        showNotification('Nota diária adicionada com sucesso!', 'success');
+        showNotification('Nota financeira adicionada com sucesso!', 'success');
+    } else {
+        showNotification('Erro ao adicionar nota financeira. Tente novamente.', 'error');
     }
 }
 

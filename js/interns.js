@@ -265,7 +265,7 @@ export function deleteIntern(internId) {
     showNotification(`Estagiário "${internName}" excluído com sucesso!`, 'success');
 }
 
-export function addIntern(internData) {
+export async function addIntern(internData) {
     // Check if username already exists
     if (db.users.some(u => u.username === internData.username)) {
         showNotification('Nome de usuário já existe. Por favor, escolha outro.', 'error');
@@ -273,14 +273,30 @@ export function addIntern(internData) {
     }
 
     const newIntern = {
-        id: db.nextUserId, // Use nextUserId for new users
-        role: 'intern', // Always 'intern' for this function
-        changeHistory: [], // Initialize change history
-        ...internData
+        role: 'intern',
+        change_history: [],
+        username: internData.username,
+        password: internData.password,
+        name: internData.name,
+        cpf: internData.cpf,
+        phone: internData.phone,
+        email: internData.email,
+        address: internData.address,
+        institution: internData.institution,
+        graduation_period: internData.graduationPeriod,
+        education: internData.education,
+        discipline: internData.discipline
     };
 
-    db.users.push(newIntern);
-    saveDb();
-    showNotification(`Estagiário "${newIntern.name}" cadastrado com sucesso!`, 'success');
-    return true;
+    // Usar Supabase para salvar
+    const { users } = await import('./database.js');
+    const savedIntern = await users.create(newIntern);
+    
+    if (savedIntern) {
+        showNotification(`Estagiário "${newIntern.name}" cadastrado com sucesso!`, 'success');
+        return true;
+    } else {
+        showNotification('Erro ao cadastrar estagiário. Tente novamente.', 'error');
+        return false;
+    }
 }

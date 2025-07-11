@@ -707,7 +707,7 @@ async function saveNewSchedule() {
     const serviceType = document.getElementById('tipo-servico').value;
     const selectedProfessionalId = document.getElementById('select-assigned-professional').value;
     const observations = document.getElementById('observacoes-agendamento').value;
-    const sendEmail = document.getElementById('send-email-confirmation').checked; // NEW
+    const sendEmail = document.getElementById('send-email-confirmation').checked;
     const currentUser = getCurrentUser();
 
     if (!clientId || !date || !time || !serviceType) {
@@ -725,70 +725,56 @@ async function saveNewSchedule() {
             assignedToUserName = selectedUser.name;
         }
     } else if (currentUser.role === 'staff' || currentUser.role === 'intern') {
-        // If no professional is selected, but the current user is staff/intern, assign to them by default.
         assignedToUserId = currentUser.id;
         assignedToUserName = currentUser.name;
     }
 
     const newSchedule = {
-        id: db.nextScheduleId,
-        clientId: clientId,
+        client_id: clientId,
         date: date,
         time: time,
-        serviceType: serviceType,
+        service_type: serviceType,
         observations: observations,
         status: 'agendado',
-        assignedToUserId: assignedToUserId,
-        assignedToUserName: assignedToUserName
+        assigned_to_user_id: assignedToUserId,
+        assigned_to_user_name: assignedToUserName
     };
 
-    db.schedules.push(newSchedule);
-
-    // NEW LOGIC: Update client's assigned intern if an intern is assigned to this new schedule
-    if (assignedToUserId && db.users.find(u => u.id === assignedToUserId)?.role === 'intern') {
-        const client = db.clients.find(c => c.id === clientId);
-        if (client) {
-            const oldAssignedInternName = client.assignedInternName;
-            const newAssignedInternName = assignedToUserName;
-
-            if (client.assignedInternId !== assignedToUserId) {
-                client.assignedInternId = assignedToUserId;
-                client.assignedInternName = newAssignedInternName;
-                // Add a change history entry for the client's intern assignment
-                if (!client.changeHistory) client.changeHistory = [];
-                client.changeHistory.push({
-                    id: db.nextChangeId,
-                    date: new Date().toISOString(),
-                    changedBy: getCurrentUser().name,
-                    changes: [
-                        {
-                            field: 'Estagiário Vinculado',
-                            oldValue: oldAssignedInternName || 'Nenhum',
-                            newValue: newAssignedInternName
-                        }
-                    ]
+    // Usar Supabase para salvar
+    const { schedules } = await import('./database.js');
+    const savedSchedule = await schedules.create(newSchedule);
+    
+    if (savedSchedule) {
+        // Atualizar cliente se estagiário foi atribuído
+        if (assignedToUserId && db.users.find(u => u.id === assignedToUserId)?.role === 'intern') {
+            const client = db.clients.find(c => c.id === clientId);
+            if (client && client.assignedInternId !== assignedToUserId) {
+                const { clients } = await import('./database.js');
+                await clients.update(clientId, {
+                    assigned_intern_id: assignedToUserId,
+                    assigned_intern_name: assignedToUserName
                 });
             }
         }
-    }
+        
+        document.getElementById('form-novo-agendamento').reset();
+        document.getElementById('modal-novo-agendamento').style.display = 'none';
+        renderSchedule(document.getElementById('date-selector').value);
+        renderCalendar();
+        
+        showNotification('Agendamento criado com sucesso!', 'success');
 
-    saveDb();
-    
-    document.getElementById('form-novo-agendamento').reset();
-    document.getElementById('modal-novo-agendamento').style.display = 'none';
-    renderSchedule(document.getElementById('date-selector').value);
-    renderCalendar();
-    
-    showNotification('Agendamento criado com sucesso!', 'success');
-
-    // NEW: Attempt to send email confirmation if checked and client has email
-    if (sendEmail) {
-        const client = db.clients.find(c => c.id === newSchedule.clientId);
-        if (client && client.email) {
-            await generateAndSendAppointmentEmail(newSchedule, client); // Await the email generation
-        } else {
-            showNotification('Não foi possível enviar a confirmação por email: Cliente sem email cadastrado.', 'warning');
+        // Enviar email se solicitado
+        if (sendEmail) {
+            const client = db.clients.find(c => c.id === clientId);
+            if (client && client.email) {
+                await generateAndSendAppointmentEmail(savedSchedule, client);
+            } else {
+                showNotification('Não foi possível enviar a confirmação por email: Cliente sem email cadastrado.', 'warning');
+            }
         }
+    } else {
+        showNotification('Erro ao criar agendamento. Tente novamente.', 'error');
     }
 }
 
@@ -1182,7 +1168,7 @@ function addMaterialSelection(modalType = 'default') {
     container.appendChild(selectionDiv);
 }
 
-function addStockItem() {
+async function addStockItem() {
     const name = document.getElementById('stock-item-name').value.trim();
     const category = document.getElementById('stock-item-category').value;
     const quantity = parseInt(document.getElementById('stock-item-quantity').value);
@@ -1196,100 +1182,118 @@ function addStockItem() {
     }
 
     const newItem = {
-        id: db.nextStockItemId,
         name: name,
         category: category,
         quantity: quantity,
-        minStock: minStock,
-        unit: 'unidade', // Always store as 'unidade'
-        unitValue: unitValue, // Store unit value
+        min_stock: minStock,
+        unit: 'unidade',
+        unit_value: unitValue,
         description: description,
-        createdAt: new Date().toISOString(),
-        createdBy: getCurrentUser().name
+        created_at: new Date().toISOString(),
+        created_by: getCurrentUser().name
     };
 
-    db.stockItems.push(newItem);
+    // Usar Supabase para salvar item
+    const { stockItems, stockMovements } = await import('./database.js');
+    const savedItem = await stockItems.create(newItem);
     
-    // Add stock movement
-    db.stockMovements.push({
-        id: db.nextMovementId,
-        itemId: newItem.id,
-        type: 'entrada',
-        quantity: quantity,
-        reason: 'Adição inicial de estoque',
-        date: new Date().toISOString(),
-        user: getCurrentUser().name,
-        itemUnitValue: newItem.unitValue // Record the unit value at time of movement
-    });
+    if (savedItem) {
+        // Criar movimento de estoque inicial
+        const newMovement = {
+            item_id: savedItem.id,
+            type: 'entrada',
+            quantity: quantity,
+            reason: 'Adição inicial de estoque',
+            date: new Date().toISOString(),
+            user: getCurrentUser().name,
+            item_unit_value: unitValue
+        };
 
-    saveDb();
-    
-    document.getElementById('form-add-stock').reset();
-    document.getElementById('modal-add-stock').style.display = 'none';
-    
-    renderStockList();
-    renderStockMovements();
-    updateStockSummary();
-    // Refresh financial report with current selected period
-    const selectedPeriod = document.getElementById('financial-period-selector').value;
-    renderFinancialReport(selectedPeriod);
-    
-    showNotification('Item adicionado ao estoque com sucesso!', 'success');
-}
-
-function processStockAdjustment() {
-    const { itemId, action } = window.currentStockAdjustment;
-    const item = db.stockItems.find(item => item.id === itemId);
-    if (!item) return;
-    
-    const quantity = parseInt(document.getElementById('adjust-stock-quantity').value);
-    const reason = document.getElementById('adjust-stock-reason').value.trim();
-    
-    if (!quantity || quantity <= 0 || !reason) {
-        showNotification('Por favor, preencha todos os campos corretamente.', 'warning');
-        return;
-    }
-    
-    // Check stock availability for removal (quantity is already in the correct unit)
-    if (action === 'remove' && item.quantity < quantity) {
-        showNotification(`Quantidade insuficiente em estoque. Disponível: ${item.quantity} unidades.`, 'error');
-        return;
-    }
-    
-    if (action === 'add') {
-        item.quantity += quantity;
+        await stockMovements.create(newMovement);
+        
+        document.getElementById('form-add-stock').reset();
+        document.getElementById('modal-add-stock').style.display = 'none';
+        
+        renderStockList();
+        renderStockMovements();
+        updateStockSummary();
+        
+        // Atualizar relatório financeiro
+        const selectedPeriod = document.getElementById('financial-period-selector').value;
+        renderFinancialReport(selectedPeriod);
+        
+        showNotification('Item adicionado ao estoque com sucesso!', 'success');
     } else {
-        item.quantity -= quantity;
+        showNotification('Erro ao adicionar item ao estoque. Tente novamente.', 'error');
     }
-    
-    // Add stock movement
-    db.stockMovements.push({
-        id: db.nextMovementId,
-        itemId: itemId,
-        type: action === 'add' ? 'entrada' : 'saida',
-        quantity: quantity,
-        reason: reason,
-        date: new Date().toISOString(),
-        user: getCurrentUser().name,
-        itemUnitValue: item.unitValue // Record the unit value at time of movement
-    });
-    
-    saveDb();
-    
-    // Close modal and refresh views
-    document.getElementById('modal-adjust-stock').style.display = 'none';
-    renderStockList();
-    renderStockMovements();
-    updateStockSummary();
-    // Refresh financial report with current selected period
-    const selectedPeriod = document.getElementById('financial-period-selector').value;
-    renderFinancialReport(selectedPeriod);
-    
-    const actionText = action === 'add' ? 'adicionado ao' : 'removido do';
-    showNotification(`${quantity} unidades ${actionText} estoque com sucesso!`, 'success');
 }
 
-function addNewIntern() {
+async function processStockAdjustment() {
+    const itemId = parseInt(window.currentAdjustingItemId);
+    const action = window.currentAdjustmentAction;
+    const quantity = parseInt(document.getElementById('adjustment-quantity').value);
+    const reason = document.getElementById('adjustment-reason').value.trim();
+
+    if (!quantity || quantity <= 0 || !reason) {
+        showNotification('Por favor, preencha a quantidade e o motivo.', 'warning');
+        return;
+    }
+
+    const item = db.stockItems.find(i => i.id === itemId);
+    if (!item) {
+        showNotification('Item não encontrado.', 'error');
+        return;
+    }
+
+    let newQuantity;
+    if (action === 'add') {
+        newQuantity = item.quantity + quantity;
+    } else {
+        if (item.quantity < quantity) {
+            showNotification('Quantidade insuficiente em estoque.', 'error');
+            return;
+        }
+        newQuantity = item.quantity - quantity;
+    }
+
+    // Usar Supabase para atualizar e criar movimento
+    const { stockItems, stockMovements } = await import('./database.js');
+    
+    // Atualizar item
+    const updatedItem = await stockItems.update(itemId, { quantity: newQuantity });
+    
+    if (updatedItem) {
+        // Criar movimento de estoque
+        const newMovement = {
+            item_id: itemId,
+            type: action === 'add' ? 'entrada' : 'saida',
+            quantity: quantity,
+            reason: reason,
+            date: new Date().toISOString(),
+            user: getCurrentUser().name,
+            item_unit_value: item.unit_value || item.unitValue
+        };
+
+        await stockMovements.create(newMovement);
+        
+        // Fechar modal e atualizar views
+        document.getElementById('modal-adjust-stock').style.display = 'none';
+        renderStockList();
+        renderStockMovements();
+        updateStockSummary();
+        
+        // Atualizar relatório financeiro
+        const selectedPeriod = document.getElementById('financial-period-selector').value;
+        renderFinancialReport(selectedPeriod);
+        
+        const actionText = action === 'add' ? 'adicionado ao' : 'removido do';
+        showNotification(`${quantity} unidades ${actionText} estoque com sucesso!`, 'success');
+    } else {
+        showNotification('Erro ao ajustar estoque. Tente novamente.', 'error');
+    }
+}
+
+async function addNewIntern() {
     const username = document.getElementById('new-intern-username').value.trim();
     const password = document.getElementById('new-intern-password').value.trim();
     const name = document.getElementById('new-intern-name').value.trim();
@@ -1321,12 +1325,12 @@ function addNewIntern() {
         discipline
     };
 
-    if (addIntern(internData)) { // Call addIntern from interns.js
+    const success = await addIntern(internData);
+    if (success) {
         document.getElementById('form-add-intern').reset();
         document.getElementById('modal-add-intern').style.display = 'none';
-        renderInternList(); // Refresh the intern list
+        renderInternList();
     }
-    // Notification handled by addIntern function
 }
 
 function renderGeneralDocuments(filter = '', typeFilter = '') {
@@ -1404,7 +1408,7 @@ function renderGeneralDocuments(filter = '', typeFilter = '') {
     });
 }
 
-function addGeneralDocument() {
+async function addGeneralDocument() {
     const title = document.getElementById('general-document-title').value.trim();
     const type = document.getElementById('general-document-type').value;
     const description = document.getElementById('general-document-description').value.trim();
@@ -1424,30 +1428,29 @@ function addGeneralDocument() {
     }
 
     const reader = new FileReader();
-    reader.onload = function(e) {
-        if (!db.generalDocuments) {
-            db.generalDocuments = [];
-        }
-
+    reader.onload = async function(e) {
         const newDocument = {
-            id: db.nextGeneralDocumentId,
             title: title,
             type: type,
             description: description,
-            fileName: file.name,
-            fileData: e.target.result,
-            createdAt: new Date().toISOString(),
-            createdBy: getCurrentUser().name,
-            documentType: 'file'
+            file_name: file.name,
+            file_data: e.target.result,
+            created_at: new Date().toISOString(),
+            created_by: getCurrentUser().name,
+            document_type: 'file'
         };
 
-        db.generalDocuments.push(newDocument);
-        saveDb();
+        const { generalDocuments } = await import('./database.js');
+        const savedDocument = await generalDocuments.create(newDocument);
         
-        document.getElementById('modal-add-general-document').style.display = 'none';
-        document.getElementById('form-add-general-document').reset();
-        renderGeneralDocuments();
-        showNotification('Documento adicionado com sucesso!', 'success');
+        if (savedDocument) {
+            document.getElementById('modal-add-general-document').style.display = 'none';
+            document.getElementById('form-add-general-document').reset();
+            renderGeneralDocuments();
+            showNotification('Documento adicionado com sucesso!', 'success');
+        } else {
+            showNotification('Erro ao adicionar documento. Tente novamente.', 'error');
+        }
     };
 
     reader.onerror = function() {
@@ -1457,7 +1460,7 @@ function addGeneralDocument() {
     reader.readAsDataURL(file);
 }
 
-function addGeneralNote() {
+async function addGeneralNote() {
     const title = document.getElementById('general-note-title').value.trim();
     const type = document.getElementById('general-note-type').value;
     const content = document.getElementById('general-note-content').value.trim();
@@ -1467,40 +1470,38 @@ function addGeneralNote() {
         return;
     }
 
-    if (!db.generalDocuments) {
-        db.generalDocuments = [];
-    }
-
     const newNote = {
-        id: db.nextGeneralDocumentId,
         title: title,
         type: type,
         content: content,
-        createdAt: new Date().toISOString(),
-        createdBy: getCurrentUser().name,
-        documentType: 'note'
+        created_at: new Date().toISOString(),
+        created_by: getCurrentUser().name,
+        document_type: 'note'
     };
 
-    db.generalDocuments.push(newNote);
-    saveDb();
+    const { generalDocuments } = await import('./database.js');
+    const savedNote = await generalDocuments.create(newNote);
     
-    document.getElementById('modal-add-general-note').style.display = 'none';
-    document.getElementById('form-add-general-note').reset();
-    renderGeneralDocuments();
-    showNotification('Nota adicionada com sucesso!', 'success');
+    if (savedNote) {
+        document.getElementById('modal-add-general-note').style.display = 'none';
+        document.getElementById('form-add-general-note').reset();
+        renderGeneralDocuments();
+        showNotification('Nota adicionada com sucesso!', 'success');
+    } else {
+        showNotification('Erro ao adicionar nota. Tente novamente.', 'error');
+    }
 }
 
-function deleteGeneralDocument(documentId) {
+async function deleteGeneralDocument(documentId) {
     if (!confirm('Tem certeza que deseja excluir este item?')) return;
     
-    if (!db.generalDocuments) return;
+    const { generalDocuments } = await import('./database.js');
+    const deleted = await generalDocuments.delete(documentId);
     
-    const docIndex = db.generalDocuments.findIndex(doc => doc.id === documentId);
-    if (docIndex !== -1) {
-        const deletedDoc = db.generalDocuments[docIndex];
-        db.generalDocuments.splice(docIndex, 1);
-        saveDb();
+    if (deleted) {
         renderGeneralDocuments();
-        showNotification(`${deletedDoc.documentType === 'note' ? 'Nota' : 'Documento'} excluído com sucesso!`, 'success');
+        showNotification('Item excluído com sucesso!', 'success');
+    } else {
+        showNotification('Erro ao excluir item. Tente novamente.', 'error');
     }
 }

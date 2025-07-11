@@ -323,7 +323,7 @@ function renderClientDocuments(documents) {
     });
 }
 
-export function addClientNote() {
+export async function addClientNote() {
     const client = db.clients.find(c => c.id === window.currentClientId);
     if (!client) return;
 
@@ -335,28 +335,28 @@ export function addClientNote() {
         return;
     }
 
-    if (!client.notes) {
-        client.notes = [];
-    }
-
     const newNote = {
-        id: db.nextNoteId,
-        clientId: client.id,
+        client_id: client.id,
         title: title,
         content: content,
         date: new Date().toISOString(),
         author: getCurrentUser().name
     };
 
-    client.notes.push(newNote);
-
-    saveDb();
-    document.getElementById('modal-add-note').style.display = 'none';
-    showClientDetails(window.currentClientId);
-    showNotification('Nota adicionada com sucesso!', 'success');
+    // Usar Supabase para salvar
+    const { clientNotes } = await import('./database.js');
+    const savedNote = await clientNotes.create(newNote);
+    
+    if (savedNote) {
+        document.getElementById('modal-add-note').style.display = 'none';
+        showClientDetails(window.currentClientId);
+        showNotification('Nota adicionada com sucesso!', 'success');
+    } else {
+        showNotification('Erro ao adicionar nota. Tente novamente.', 'error');
+    }
 }
 
-export function addClientDocument() {
+export async function addClientDocument() {
     const client = db.clients.find(c => c.id === window.currentClientId);
     if (!client) return;
 
@@ -379,30 +379,30 @@ export function addClientDocument() {
     }
 
     const reader = new FileReader();
-    reader.onload = function(e) {
-        if (!client.documents) {
-            client.documents = [];
-        }
-
+    reader.onload = async function(e) {
         const newDocument = {
-            id: db.nextDocumentId,
-            clientId: client.id,
+            client_id: client.id,
             title: title,
             type: type,
             description: description,
-            fileName: file.name,
-            fileData: e.target.result,
-            uploadDate: new Date().toISOString(),
-            uploadedBy: getCurrentUser().name
+            file_name: file.name,
+            file_data: e.target.result,
+            upload_date: new Date().toISOString(),
+            uploaded_by: getCurrentUser().name
         };
 
-        client.documents.push(newDocument);
-
-        saveDb();
-        document.getElementById('modal-add-document').style.display = 'none';
-        document.getElementById('form-add-document').reset();
-        showClientDetails(window.currentClientId);
-        showNotification('Documento anexado com sucesso!', 'success');
+        // Usar Supabase para salvar
+        const { clientDocuments } = await import('./database.js');
+        const savedDocument = await clientDocuments.create(newDocument);
+        
+        if (savedDocument) {
+            document.getElementById('modal-add-document').style.display = 'none';
+            document.getElementById('form-add-document').reset();
+            showClientDetails(window.currentClientId);
+            showNotification('Documento anexado com sucesso!', 'success');
+        } else {
+            showNotification('Erro ao anexar documento. Tente novamente.', 'error');
+        }
     };
 
     reader.onerror = function() {
@@ -412,14 +412,16 @@ export function addClientDocument() {
     reader.readAsDataURL(file);
 }
 
-export function deleteClientDocument(documentId) {
-    const client = db.clients.find(c => c.id === window.currentClientId);
-    if (!client || !client.documents) return;
-
-    client.documents = client.documents.filter(doc => doc.id !== documentId);
-    saveDb();
-    showClientDetails(window.currentClientId);
-    showNotification('Documento excluído com sucesso!', 'success');
+export async function deleteClientDocument(documentId) {
+    const { clientDocuments } = await import('./database.js');
+    const deleted = await clientDocuments.delete(documentId);
+    
+    if (deleted) {
+        showClientDetails(window.currentClientId);
+        showNotification('Documento excluído com sucesso!', 'success');
+    } else {
+        showNotification('Erro ao excluir documento. Tente novamente.', 'error');
+    }
 }
 
 export function renderMeusPacientes(filter = '') {
