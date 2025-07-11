@@ -662,25 +662,17 @@ export const schedules = {
             setLoading('schedules.create', true);
             
             const processedData = {
-                ...scheduleData,
+                client_id: scheduleData.client_id || scheduleData.clientId,
                 date: convertDateToString(scheduleData.date),
                 time: convertTimeToString(scheduleData.time),
-                // Mapeamento correto dos campos
-                service_type: scheduleData.service_type || scheduleData.serviceType,
-                anamnesis_type: scheduleData.anamnesis_type || scheduleData.anamnesisType,
-                cancellation_reason: scheduleData.cancellation_reason || scheduleData.cancellationReason,
-                cancellation_image: scheduleData.cancellation_image || scheduleData.cancellationImage,
+                status: scheduleData.status || 'agendado',
+                observations: scheduleData.observations,
                 assigned_to_user_id: scheduleData.assigned_to_user_id || scheduleData.assignedToUserId,
                 assigned_to_user_name: scheduleData.assigned_to_user_name || scheduleData.assignedToUserName
+                // REMOVIDO: service_type até descobrirmos o nome correto
             };
             
-            // Remover campos que podem não existir no schema
-            delete processedData.serviceType;
-            delete processedData.anamnesisType;
-            delete processedData.cancellationReason;
-            delete processedData.cancellationImage;
-            delete processedData.assignedToUserId;
-            delete processedData.assignedToUserName;
+            console.log('Tentando inserir agendamento sem service_type:', processedData);
             
             const { data, error } = await supabase
                 .from('schedules')
@@ -688,7 +680,13 @@ export const schedules = {
                 .select()
                 .single();
             
-            if (error) throw error;
+            if (error) {
+                console.error('Erro detalhado:', error);
+                throw error;
+            }
+            
+            console.log('Agendamento criado com sucesso:', data);
+            console.log('Campos disponíveis no registro criado:', Object.keys(data));
             
             // Atualizar cache
             cache.schedules.push(data);
@@ -706,25 +704,15 @@ export const schedules = {
             setLoading('schedules.update', true);
             
             const processedData = {
-                ...scheduleData,
+                client_id: scheduleData.client_id || scheduleData.clientId,
                 date: convertDateToString(scheduleData.date),
                 time: convertTimeToString(scheduleData.time),
-                // Mapeamento correto dos campos
-                service_type: scheduleData.service_type || scheduleData.serviceType,
-                anamnesis_type: scheduleData.anamnesis_type || scheduleData.anamnesisType,
-                cancellation_reason: scheduleData.cancellation_reason || scheduleData.cancellationReason,
-                cancellation_image: scheduleData.cancellation_image || scheduleData.cancellationImage,
+                status: scheduleData.status,
+                observations: scheduleData.observations,
                 assigned_to_user_id: scheduleData.assigned_to_user_id || scheduleData.assignedToUserId,
                 assigned_to_user_name: scheduleData.assigned_to_user_name || scheduleData.assignedToUserName
+                // REMOVIDO: service_type até descobrirmos o nome correto
             };
-            
-            // Remover campos que podem não existir no schema
-            delete processedData.serviceType;
-            delete processedData.anamnesisType;
-            delete processedData.cancellationReason;
-            delete processedData.cancellationImage;
-            delete processedData.assignedToUserId;
-            delete processedData.assignedToUserName;
             
             const { data, error } = await supabase
                 .from('schedules')
@@ -1812,51 +1800,55 @@ export async function debugSchedulesSchema() {
     try {
         console.log('=== DEBUG: Verificando schema da tabela schedules ===');
         
-        // Tentar buscar um registro para ver os campos disponíveis
+        // Primeiro, tentar buscar registros existentes
         const { data, error } = await supabase
             .from('schedules')
             .select('*')
-            .limit(1);
+            .limit(5);
         
         if (error) {
             console.error('Erro ao buscar dados:', error);
-            return;
-        }
-        
-        if (data && data.length > 0) {
-            console.log('Campos disponíveis na tabela schedules:');
+        } else if (data && data.length > 0) {
+            console.log('✅ Encontrados', data.length, 'registros existentes');
+            console.log('📋 Campos disponíveis na tabela schedules:');
             console.log(Object.keys(data[0]));
-            console.log('Exemplo de registro:');
+            console.log('📄 Exemplo de registro completo:');
             console.log(data[0]);
         } else {
-            console.log('Tabela schedules está vazia');
+            console.log('⚠️ Tabela schedules está vazia');
         }
         
-        // Tentar criar um registro de teste para ver quais campos são aceitos
+        // Agora tentar criar um registro mínimo para ver quais campos são obrigatórios
         const testData = {
             client_id: 1,
             date: '2024-01-01',
             time: '10:00',
-            status: 'agendado',
-            observations: 'teste'
+            status: 'agendado'
         };
         
-        console.log('Tentando inserir registro de teste...');
+        console.log('🧪 Tentando inserir registro de teste básico...');
+        console.log('📋 Dados do teste:', testData);
+        
         const { data: insertData, error: insertError } = await supabase
             .from('schedules')
             .insert([testData])
             .select();
         
         if (insertError) {
-            console.error('Erro ao inserir (isso nos mostra os campos obrigatórios):', insertError);
-        } else {
-            console.log('Registro de teste inserido com sucesso:', insertData);
+            console.error('❌ Erro ao inserir (mostra campos obrigatórios/inválidos):', insertError);
+            console.log('💡 Isso nos ajuda a entender o schema correto');
+        } else if (insertData && insertData.length > 0) {
+            console.log('✅ Registro de teste inserido com sucesso!');
+            console.log('📋 Campos retornados pelo Supabase:', Object.keys(insertData[0]));
+            console.log('📄 Registro completo:', insertData[0]);
+            
             // Deletar o registro de teste
             await supabase.from('schedules').delete().eq('id', insertData[0].id);
+            console.log('🗑️ Registro de teste removido');
         }
         
     } catch (error) {
-        console.error('Erro no debug:', error);
+        console.error('💥 Erro no debug:', error);
     }
 }
 

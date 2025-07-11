@@ -738,18 +738,23 @@ async function saveNewSchedule() {
         client_id: clientId,
         date: date,
         time: time,
-        service_type: serviceType,
+        // TEMPORARIAMENTE REMOVIDO: service_type: serviceType,
         observations: observations,
         status: 'agendado',
         assigned_to_user_id: assignedToUserId,
         assigned_to_user_name: assignedToUserName
     };
 
+    console.log('📋 Tentando criar agendamento:', newSchedule);
+    console.log('🎯 Tipo de serviço selecionado (não enviado):', serviceType);
+
     // Usar Supabase para salvar
     const { schedules } = await import('./database.js');
     const savedSchedule = await schedules.create(newSchedule);
     
     if (savedSchedule) {
+        console.log('✅ Agendamento salvo com sucesso:', savedSchedule);
+        
         // Atualizar cliente se estagiário foi atribuído
         if (assignedToUserId && db.users.find(u => u.id === assignedToUserId)?.role === 'intern') {
             const client = db.clients.find(c => c.id === clientId);
@@ -767,7 +772,7 @@ async function saveNewSchedule() {
         renderSchedule(document.getElementById('date-selector').value);
         renderCalendar();
         
-        showNotification('Agendamento criado com sucesso!', 'success');
+        showNotification('Agendamento criado com sucesso! (Tipo de serviço será adicionado após descobrirmos o campo correto)', 'success');
 
         // Enviar email se solicitado
         if (sendEmail) {
