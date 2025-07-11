@@ -985,7 +985,7 @@ function saveAttendanceConfirmation() {
     const schedule = db.schedules.find(s => s.id === window.currentConfirmingScheduleId);
     if (!schedule) return;
 
-    const client = db.clients.find(c => c.id === schedule.clientId);
+    const client = db.clients.find(c => c.id === (schedule.client_id || schedule.clientId));
     if (!client) return;
 
     const professional = document.getElementById('profissional-responsavel').value.trim();
@@ -1004,44 +1004,26 @@ function saveAttendanceConfirmation() {
     const materialsUsed = [];
     const materialSelections = document.querySelectorAll('#materials-selection-confirm .material-selection');
     
-    let hasInsufficientStock = false; // Flag to prevent saving if stock is an issue
+    let hasInsufficientStock = false;
     
     materialSelections.forEach(selection => {
-        const itemId = parseInt(selection.querySelector('.material-item').value);
-        const quantity = parseInt(selection.querySelector('.material-quantity').value) || 0;
+        const materialId = parseInt(selection.getAttribute('data-material-id'));
+        const quantityUsed = parseInt(selection.querySelector('.quantity-used').textContent);
         
-        if (itemId && quantity > 0) {
-            const stockItem = db.stockItems.find(item => item.id === itemId);
-            if (stockItem) {
-                // Check if we have enough stock (quantity is already in the correct unit)
-                if (stockItem.quantity >= quantity) {
-                    materialsUsed.push({
-                        itemId: itemId,
-                        itemName: stockItem.name,
-                        quantityUsed: quantity,
-                        unit: stockItem.unit
-                    });
-                    
-                    // Update stock (subtract the quantity directly since it's in the same unit)
-                    stockItem.quantity -= quantity;
-                    
-                    // Add stock movement
-                    db.stockMovements.push({
-                        id: db.nextMovementId,
-                        itemId: itemId,
-                        type: 'saida',
-                        quantity: quantity,
-                        reason: `Atendimento - ${client.name}`,
-                        date: new Date().toISOString(),
-                        user: getCurrentUser().name,
-                        scheduleId: schedule.id,
-                        itemUnitValue: stockItem.unitValue // Record the unit value at time of movement
-                    });
-                } else {
-                    showNotification(`Estoque insuficiente para ${stockItem.name}. Disponível: ${stockItem.quantity} unidades.`, 'error');
+        if (quantityUsed > 0) {
+            const material = db.stockItems.find(item => item.id === materialId);
+            if (material) {
+                if (material.quantity < quantityUsed) {
+                    showNotification(`Estoque insuficiente para o material "${material.name}". Disponível: ${material.quantity}, Solicitado: ${quantityUsed}`, 'error');
                     hasInsufficientStock = true;
-                    return; // Exit current forEach iteration
+                    return;
                 }
+                
+                materialsUsed.push({
+                    materialId: materialId,
+                    materialName: material.name,
+                    quantityUsed: quantityUsed
+                });
             }
         }
     });
@@ -1053,8 +1035,8 @@ function saveAttendanceConfirmation() {
 
     // Determine the intern ID for the attendance record
     let internIdForAttendance = null;
-    if (schedule.assignedToUserId) {
-        const assignedUser = db.users.find(u => u.id === schedule.assignedToUserId);
+    if (schedule.assigned_to_user_id || schedule.assignedToUserId) {
+        const assignedUser = db.users.find(u => u.id === (schedule.assigned_to_user_id || schedule.assignedToUserId));
         if (assignedUser && assignedUser.role === 'intern') {
             internIdForAttendance = assignedUser.id;
         }
@@ -1072,7 +1054,7 @@ function saveAttendanceConfirmation() {
         id: db.nextAppointmentId,
         date: schedule.date,
         time: schedule.time,
-        serviceType: schedule.serviceType,
+        serviceType: schedule.service_type || schedule.serviceType,
         notes: observations,
         value: value,
         durationHours: durationHours,

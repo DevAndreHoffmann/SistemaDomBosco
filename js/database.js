@@ -137,12 +137,19 @@ export const users = {
         try {
             setLoading('users.create', true);
             
+            const processedData = {
+                ...userData,
+                change_history: [],
+                // Mapeamento correto dos campos
+                graduation_period: userData.graduation_period || userData.graduationPeriod
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.graduationPeriod;
+            
             const { data, error } = await supabase
                 .from('users')
-                .insert([{
-                    ...userData,
-                    change_history: []
-                }])
+                .insert([processedData])
                 .select()
                 .single();
             
@@ -163,9 +170,18 @@ export const users = {
         try {
             setLoading('users.update', true);
             
+            const processedData = {
+                ...userData,
+                // Mapeamento correto dos campos
+                graduation_period: userData.graduation_period || userData.graduationPeriod
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.graduationPeriod;
+            
             const { data, error } = await supabase
                 .from('users')
-                .update(userData)
+                .update(processedData)
                 .eq('id', id)
                 .select()
                 .single();
@@ -257,12 +273,29 @@ export const clients = {
             const processedData = {
                 ...clientData,
                 birth_date: convertDateToString(clientData.birth_date || clientData.birthDate),
-                // Manter compatibilidade com nomes antigos
+                // Mapeamento correto dos campos
                 estado_civil: clientData.estado_civil || clientData.estadoCivil,
                 contato_emergencia: clientData.contato_emergencia || clientData.contatoEmergencia,
                 assigned_intern_id: clientData.assigned_intern_id || clientData.assignedInternId,
-                assigned_intern_name: clientData.assigned_intern_name || clientData.assignedInternName
+                assigned_intern_name: clientData.assigned_intern_name || clientData.assignedInternName,
+                school_name: clientData.school_name || clientData.schoolName,
+                school_grade: clientData.school_grade || clientData.schoolGrade,
+                school_period: clientData.school_period || clientData.schoolPeriod,
+                responsible_name: clientData.responsible_name || clientData.responsibleName,
+                responsible_phone: clientData.responsible_phone || clientData.responsiblePhone
             };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.birthDate;
+            delete processedData.estadoCivil;
+            delete processedData.contatoEmergencia;
+            delete processedData.assignedInternId;
+            delete processedData.assignedInternName;
+            delete processedData.schoolName;
+            delete processedData.schoolGrade;
+            delete processedData.schoolPeriod;
+            delete processedData.responsibleName;
+            delete processedData.responsiblePhone;
             
             const { data, error } = await supabase
                 .from('clients')
@@ -287,15 +320,32 @@ export const clients = {
         try {
             setLoading('clients.update', true);
             
-            // Converter datas para string se necessário
             const processedData = {
                 ...clientData,
                 birth_date: convertDateToString(clientData.birth_date || clientData.birthDate),
+                // Mapeamento correto dos campos
                 estado_civil: clientData.estado_civil || clientData.estadoCivil,
                 contato_emergencia: clientData.contato_emergencia || clientData.contatoEmergencia,
                 assigned_intern_id: clientData.assigned_intern_id || clientData.assignedInternId,
-                assigned_intern_name: clientData.assigned_intern_name || clientData.assignedInternName
+                assigned_intern_name: clientData.assigned_intern_name || clientData.assignedInternName,
+                school_name: clientData.school_name || clientData.schoolName,
+                school_grade: clientData.school_grade || clientData.schoolGrade,
+                school_period: clientData.school_period || clientData.schoolPeriod,
+                responsible_name: clientData.responsible_name || clientData.responsibleName,
+                responsible_phone: clientData.responsible_phone || clientData.responsiblePhone
             };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.birthDate;
+            delete processedData.estadoCivil;
+            delete processedData.contatoEmergencia;
+            delete processedData.assignedInternId;
+            delete processedData.assignedInternName;
+            delete processedData.schoolName;
+            delete processedData.schoolGrade;
+            delete processedData.schoolPeriod;
+            delete processedData.responsibleName;
+            delete processedData.responsiblePhone;
             
             const { data, error } = await supabase
                 .from('clients')
@@ -423,10 +473,24 @@ export const appointments = {
                 ...appointmentData,
                 date: convertDateToString(appointmentData.date),
                 time: convertTimeToString(appointmentData.time),
+                // Mapeamento correto dos campos
                 duration_hours: appointmentData.duration_hours || appointmentData.durationHours || 0,
                 anamnesis_type: appointmentData.anamnesis_type || appointmentData.anamnesisType,
-                materials_used: appointmentData.materials_used || appointmentData.materialsUsed || []
+                materials_used: appointmentData.materials_used || appointmentData.materialsUsed || [],
+                service_type: appointmentData.service_type || appointmentData.serviceType,
+                client_id: appointmentData.client_id || appointmentData.clientId,
+                intern_id: appointmentData.intern_id || appointmentData.internId,
+                attended_by: appointmentData.attended_by || appointmentData.attendedBy
             };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.durationHours;
+            delete processedData.anamnesisType;
+            delete processedData.materialsUsed;
+            delete processedData.serviceType;
+            delete processedData.clientId;
+            delete processedData.internId;
+            delete processedData.attendedBy;
             
             const { data, error } = await supabase
                 .from('appointments')
@@ -455,10 +519,24 @@ export const appointments = {
                 ...appointmentData,
                 date: convertDateToString(appointmentData.date),
                 time: convertTimeToString(appointmentData.time),
+                // Mapeamento correto dos campos
                 duration_hours: appointmentData.duration_hours || appointmentData.durationHours,
                 anamnesis_type: appointmentData.anamnesis_type || appointmentData.anamnesisType,
-                materials_used: appointmentData.materials_used || appointmentData.materialsUsed
+                materials_used: appointmentData.materials_used || appointmentData.materialsUsed,
+                service_type: appointmentData.service_type || appointmentData.serviceType,
+                client_id: appointmentData.client_id || appointmentData.clientId,
+                intern_id: appointmentData.intern_id || appointmentData.internId,
+                attended_by: appointmentData.attended_by || appointmentData.attendedBy
             };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.durationHours;
+            delete processedData.anamnesisType;
+            delete processedData.materialsUsed;
+            delete processedData.serviceType;
+            delete processedData.clientId;
+            delete processedData.internId;
+            delete processedData.attendedBy;
             
             const { data, error } = await supabase
                 .from('appointments')
@@ -587,12 +665,22 @@ export const schedules = {
                 ...scheduleData,
                 date: convertDateToString(scheduleData.date),
                 time: convertTimeToString(scheduleData.time),
+                // Mapeamento correto dos campos
+                service_type: scheduleData.service_type || scheduleData.serviceType,
                 anamnesis_type: scheduleData.anamnesis_type || scheduleData.anamnesisType,
                 cancellation_reason: scheduleData.cancellation_reason || scheduleData.cancellationReason,
                 cancellation_image: scheduleData.cancellation_image || scheduleData.cancellationImage,
                 assigned_to_user_id: scheduleData.assigned_to_user_id || scheduleData.assignedToUserId,
                 assigned_to_user_name: scheduleData.assigned_to_user_name || scheduleData.assignedToUserName
             };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.serviceType;
+            delete processedData.anamnesisType;
+            delete processedData.cancellationReason;
+            delete processedData.cancellationImage;
+            delete processedData.assignedToUserId;
+            delete processedData.assignedToUserName;
             
             const { data, error } = await supabase
                 .from('schedules')
@@ -621,12 +709,22 @@ export const schedules = {
                 ...scheduleData,
                 date: convertDateToString(scheduleData.date),
                 time: convertTimeToString(scheduleData.time),
+                // Mapeamento correto dos campos
+                service_type: scheduleData.service_type || scheduleData.serviceType,
                 anamnesis_type: scheduleData.anamnesis_type || scheduleData.anamnesisType,
                 cancellation_reason: scheduleData.cancellation_reason || scheduleData.cancellationReason,
                 cancellation_image: scheduleData.cancellation_image || scheduleData.cancellationImage,
                 assigned_to_user_id: scheduleData.assigned_to_user_id || scheduleData.assignedToUserId,
                 assigned_to_user_name: scheduleData.assigned_to_user_name || scheduleData.assignedToUserName
             };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.serviceType;
+            delete processedData.anamnesisType;
+            delete processedData.cancellationReason;
+            delete processedData.cancellationImage;
+            delete processedData.assignedToUserId;
+            delete processedData.assignedToUserName;
             
             const { data, error } = await supabase
                 .from('schedules')
@@ -753,8 +851,17 @@ export const dailyNotes = {
             
             const processedData = {
                 ...noteData,
-                date: convertDateToString(noteData.date)
+                date: convertDateToString(noteData.date),
+                // Mapeamento correto dos campos
+                note_type: noteData.note_type || noteData.noteType,
+                created_at: noteData.created_at || noteData.createdAt || new Date().toISOString(),
+                created_by: noteData.created_by || noteData.createdBy
             };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.noteType;
+            delete processedData.createdAt;
+            delete processedData.createdBy;
             
             const { data, error } = await supabase
                 .from('daily_notes')
@@ -907,9 +1014,26 @@ export const generalDocuments = {
         try {
             setLoading('generalDocuments.create', true);
             
+            const processedData = {
+                ...documentData,
+                // Mapeamento correto dos campos
+                created_at: documentData.created_at || documentData.createdAt || new Date().toISOString(),
+                created_by: documentData.created_by || documentData.createdBy,
+                document_type: documentData.document_type || documentData.documentType,
+                file_name: documentData.file_name || documentData.fileName,
+                file_data: documentData.file_data || documentData.fileData
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.createdAt;
+            delete processedData.createdBy;
+            delete processedData.documentType;
+            delete processedData.fileName;
+            delete processedData.fileData;
+            
             const { data, error } = await supabase
                 .from('general_documents')
-                .insert([documentData])
+                .insert([processedData])
                 .select()
                 .single();
             
@@ -930,9 +1054,26 @@ export const generalDocuments = {
         try {
             setLoading('generalDocuments.update', true);
             
+            const processedData = {
+                ...documentData,
+                // Mapeamento correto dos campos
+                created_at: documentData.created_at || documentData.createdAt,
+                created_by: documentData.created_by || documentData.createdBy,
+                document_type: documentData.document_type || documentData.documentType,
+                file_name: documentData.file_name || documentData.fileName,
+                file_data: documentData.file_data || documentData.fileData
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.createdAt;
+            delete processedData.createdBy;
+            delete processedData.documentType;
+            delete processedData.fileName;
+            delete processedData.fileData;
+            
             const { data, error } = await supabase
                 .from('general_documents')
-                .update(documentData)
+                .update(processedData)
                 .eq('id', id)
                 .select()
                 .single();
@@ -1058,9 +1199,24 @@ export const stockItems = {
         try {
             setLoading('stockItems.create', true);
             
+            const processedData = {
+                ...itemData,
+                // Mapeamento correto dos campos
+                min_stock: itemData.min_stock || itemData.minStock,
+                unit_value: itemData.unit_value || itemData.unitValue,
+                created_at: itemData.created_at || itemData.createdAt || new Date().toISOString(),
+                created_by: itemData.created_by || itemData.createdBy
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.minStock;
+            delete processedData.unitValue;
+            delete processedData.createdAt;
+            delete processedData.createdBy;
+            
             const { data, error } = await supabase
                 .from('stock_items')
-                .insert([itemData])
+                .insert([processedData])
                 .select()
                 .single();
             
@@ -1081,9 +1237,20 @@ export const stockItems = {
         try {
             setLoading('stockItems.update', true);
             
+            const processedData = {
+                ...itemData,
+                // Mapeamento correto dos campos
+                min_stock: itemData.min_stock || itemData.minStock,
+                unit_value: itemData.unit_value || itemData.unitValue
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.minStock;
+            delete processedData.unitValue;
+            
             const { data, error } = await supabase
                 .from('stock_items')
-                .update(itemData)
+                .update(processedData)
                 .eq('id', id)
                 .select()
                 .single();
@@ -1203,9 +1370,22 @@ export const stockMovements = {
         try {
             setLoading('stockMovements.create', true);
             
+            const processedData = {
+                ...movementData,
+                // Mapeamento correto dos campos
+                stock_item_id: movementData.stock_item_id || movementData.stockItemId,
+                created_at: movementData.created_at || movementData.createdAt || new Date().toISOString(),
+                created_by: movementData.created_by || movementData.createdBy
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.stockItemId;
+            delete processedData.createdAt;
+            delete processedData.createdBy;
+            
             const { data, error } = await supabase
                 .from('stock_movements')
-                .insert([movementData])
+                .insert([processedData])
                 .select()
                 .single();
             
@@ -1344,9 +1524,22 @@ export const clientNotes = {
         try {
             setLoading('clientNotes.create', true);
             
+            const processedData = {
+                ...noteData,
+                // Mapeamento correto dos campos
+                client_id: noteData.client_id || noteData.clientId,
+                created_at: noteData.created_at || noteData.createdAt || new Date().toISOString(),
+                created_by: noteData.created_by || noteData.createdBy
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.clientId;
+            delete processedData.createdAt;
+            delete processedData.createdBy;
+            
             const { data, error } = await supabase
                 .from('client_notes')
-                .insert([noteData])
+                .insert([processedData])
                 .select()
                 .single();
             
@@ -1423,9 +1616,26 @@ export const clientDocuments = {
         try {
             setLoading('clientDocuments.create', true);
             
+            const processedData = {
+                ...documentData,
+                // Mapeamento correto dos campos
+                client_id: documentData.client_id || documentData.clientId,
+                created_at: documentData.created_at || documentData.createdAt || new Date().toISOString(),
+                created_by: documentData.created_by || documentData.createdBy,
+                file_name: documentData.file_name || documentData.fileName,
+                file_data: documentData.file_data || documentData.fileData
+            };
+            
+            // Remover campos que podem não existir no schema
+            delete processedData.clientId;
+            delete processedData.createdAt;
+            delete processedData.createdBy;
+            delete processedData.fileName;
+            delete processedData.fileData;
+            
             const { data, error } = await supabase
                 .from('client_documents')
-                .insert([documentData])
+                .insert([processedData])
                 .select()
                 .single();
             

@@ -25,7 +25,7 @@ export function renderSchedule(selectedDate = null) {
     const daySchedules = db.schedules.filter(schedule => {
         if (schedule.date !== dateToShow) return false;
         if (currentUser.role === 'intern') {
-            return schedule.assignedToUserId === currentUser.id;
+            return schedule.assigned_to_user_id === currentUser.id || schedule.assignedToUserId === currentUser.id;
         }
         return true; // Coordinator and Staff see all
     });
@@ -41,19 +41,19 @@ export function renderSchedule(selectedDate = null) {
     daySchedules.sort((a, b) => a.time.localeCompare(b.time));
     
     daySchedules.forEach(schedule => {
-        const client = db.clients.find(c => c.id === schedule.clientId);
+        const client = db.clients.find(c => c.id === (schedule.client_id || schedule.clientId));
         
         const card = document.createElement('div');
         card.className = `schedule-card status-${schedule.status}`;
         
         let cancellationInfo = '';
-        if (schedule.status === 'cancelado' && schedule.cancelReason) {
+        if (schedule.status === 'cancelado' && (schedule.cancellation_reason || schedule.cancelReason)) {
             cancellationInfo = `
                 <div class="cancellation-info">
                     <h5>Motivo do Cancelamento:</h5>
-                    <div class="cancellation-reason">${schedule.cancelReason}</div>
-                    ${schedule.cancelImage ? `
-                        <img src="${schedule.cancelImage}" alt="Comprovante do cancelamento" class="cancellation-image" onclick="window.open('${schedule.cancelImage}', '_blank')">
+                    <div class="cancellation-reason">${schedule.cancellation_reason || schedule.cancelReason}</div>
+                    ${(schedule.cancellation_image || schedule.cancelImage) ? `
+                        <img src="${schedule.cancellation_image || schedule.cancelImage}" alt="Comprovante do cancelamento" class="cancellation-image" onclick="window.open('${schedule.cancellation_image || schedule.cancelImage}', '_blank')">
                     ` : ''}
                     <small>Cancelado em ${new Date(schedule.cancelDate).toLocaleDateString('pt-BR')} por ${schedule.canceledBy}</small>
                 </div>
@@ -74,7 +74,7 @@ export function renderSchedule(selectedDate = null) {
                 `;
             } 
             // Interns only have 'Confirmar' and 'Cancelar' if it's assigned to them
-            else if (currentUser.role === 'intern' && schedule.assignedToUserId === currentUser.id) {
+            else if (currentUser.role === 'intern' && (schedule.assigned_to_user_id === currentUser.id || schedule.assignedToUserId === currentUser.id)) {
                  buttonsHtml = `
                     <button class="btn-confirm" onclick="updateScheduleStatus(${schedule.id}, 'confirmado')">Confirmar</button>
                     <button class="btn-cancel" onclick="cancelScheduleWithReason(${schedule.id})">Cancelar</button>
@@ -93,9 +93,9 @@ export function renderSchedule(selectedDate = null) {
         card.innerHTML = `
             <div class="schedule-info">
                 <h4>${schedule.time} - ${client ? `${client.name} (ID: ${client.id})` : 'Cliente não encontrado'}</h4>
-                <p><strong>Serviço:</strong> ${serviceNames[schedule.serviceType] || schedule.serviceType}</p>
+                <p><strong>Serviço:</strong> ${serviceNames[schedule.service_type || schedule.serviceType] || schedule.service_type || schedule.serviceType}</p>
                 <p><strong>Status:</strong> ${schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}</p>
-                ${schedule.assignedToUserName ? `<p><strong>Atribuído a:</strong> ${schedule.assignedToUserName}</p>` : '<p><strong>Atribuído a:</strong> Não atribuído</p>'}
+                ${(schedule.assigned_to_user_name || schedule.assignedToUserName) ? `<p><strong>Atribuído a:</strong> ${schedule.assigned_to_user_name || schedule.assignedToUserName}</p>` : '<p><strong>Atribuído a:</strong> Não atribuído</p>'}
                 ${schedule.observations ? `<p><strong>Obs:</strong> ${schedule.observations}</p>` : ''}
                 ${cancellationInfo}
             </div>
@@ -114,13 +114,13 @@ export function updateScheduleStatus(scheduleId, newStatus) {
             const currentUser = getCurrentUser();
 
             // Check if intern is trying to confirm an appointment not assigned to them
-            if (currentUser.role === 'intern' && schedule.assignedToUserId !== currentUser.id) {
+            if (currentUser.role === 'intern' && (schedule.assigned_to_user_id || schedule.assignedToUserId) !== currentUser.id) {
                 showNotification('Você só pode confirmar agendamentos atribuídos a você.', 'error');
                 return;
             }
 
             window.currentConfirmingScheduleId = scheduleId;
-            const client = db.clients.find(c => c.id === schedule.clientId);
+            const client = db.clients.find(c => c.id === (schedule.client_id || schedule.clientId));
             
             // Pre-fill professional responsible field, preferring assigned user
             const profissionalResponsavelInput = document.getElementById('profissional-responsavel');
@@ -133,7 +133,7 @@ export function updateScheduleStatus(scheduleId, newStatus) {
                 profissionalResponsavelInput.value = currentUser.name;
                 profissionalResponsavelInput.readOnly = true; // Make it read-only
             } else {
-                profissionalResponsavelInput.value = schedule.assignedToUserName || currentUser.name;
+                profissionalResponsavelInput.value = (schedule.assigned_to_user_name || schedule.assignedToUserName) || currentUser.name;
                 profissionalResponsavelInput.readOnly = false; // Ensure it's editable for others
             }
             
@@ -144,16 +144,19 @@ export function updateScheduleStatus(scheduleId, newStatus) {
             if (clientInfoElement && client) {
                 clientInfoElement.textContent = `Cliente: ${client.name} (ID: ${client.id})`;
             }
-
+            
+            // Show modal
             document.getElementById('modal-confirmar-atendimento').style.display = 'flex';
+            
+            // Populate materials list
+            renderMaterialsForConfirmation();
         } else {
             schedule.status = newStatus;
             saveDb();
             renderSchedule(document.getElementById('date-selector').value);
-            showNotification(`Status do agendamento atualizado para ${newStatus}.`, 'success');
+            renderCalendar();
+            showNotification('Status atualizado com sucesso!', 'success');
         }
-    } else {
-        showNotification('Agendamento não encontrado.', 'error');
     }
 }
 
@@ -194,10 +197,10 @@ export function editSchedule(scheduleId) {
     populateEditClientSelectOptions();
     populateEditServiceTypeOptions();
     
-    document.getElementById('edit-cliente-agenda').value = schedule.clientId;
+    document.getElementById('edit-cliente-agenda').value = schedule.client_id || schedule.clientId;
     document.getElementById('edit-data-agendamento').value = schedule.date;
     document.getElementById('edit-hora-agendamento').value = schedule.time;
-    document.getElementById('edit-tipo-servico').value = schedule.serviceType;
+    document.getElementById('edit-tipo-servico').value = schedule.service_type || schedule.serviceType;
     document.getElementById('edit-observacoes-agendamento').value = schedule.observations || '';
     
     document.getElementById('modal-editar-agendamento').style.display = 'flex';
@@ -232,7 +235,7 @@ function populateEditServiceTypeOptions() {
     });
 }
 
-export function saveEditedSchedule() {
+export async function saveEditedSchedule() {
     const schedule = db.schedules.find(s => s.id === window.currentEditingScheduleId);
     if (!schedule) return;
     
@@ -247,19 +250,27 @@ export function saveEditedSchedule() {
         return;
     }
 
-    schedule.clientId = clientId;
-    schedule.date = date;
-    schedule.time = time;
-    schedule.serviceType = serviceType;
-    schedule.observations = observations;
+    const updatedSchedule = {
+        client_id: clientId,
+        date: date,
+        time: time,
+        service_type: serviceType,
+        observations: observations
+    };
 
-    saveDb();
+    // Usar Supabase para salvar
+    const { schedules } = await import('./database.js');
+    const savedSchedule = await schedules.update(window.currentEditingScheduleId, updatedSchedule);
     
-    document.getElementById('modal-editar-agendamento').style.display = 'none';
-    renderSchedule(document.getElementById('date-selector').value);
-    renderCalendar();
-    
-    showNotification('Agendamento atualizado com sucesso!', 'success');
+    if (savedSchedule) {
+        document.getElementById('modal-editar-agendamento').style.display = 'none';
+        renderSchedule(document.getElementById('date-selector').value);
+        renderCalendar();
+        
+        showNotification('Agendamento atualizado com sucesso!', 'success');
+    } else {
+        showNotification('Erro ao atualizar agendamento. Tente novamente.', 'error');
+    }
 }
 
 export function initializeCalendar() {
