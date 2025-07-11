@@ -4,7 +4,7 @@
 .env.production
 
 # Configuration files with sensitive data
-js/config.js
+# js/config.js - Removido para permitir acesso no Vercel
 
 # Node modules
 node_modules/
