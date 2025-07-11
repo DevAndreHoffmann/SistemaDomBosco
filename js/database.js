@@ -1893,8 +1893,17 @@ async function debugTableSchema(tableName) {
         
         if (data && data.length > 0) {
             console.log(`✅ Encontrados ${data.length} registros em ${tableName}`);
-            console.log(`📋 Campos disponíveis:`, Object.keys(data[0]));
-            console.log(`📄 Exemplo de registro:`, data[0]);
+            
+            // Mostrar campos de forma clara
+            const campos = Object.keys(data[0]);
+            console.log(`📋 CAMPOS (${campos.length}):`, campos.join(', '));
+            
+            // Mostrar exemplo de registro com campos separados
+            console.log(`📄 EXEMPLO DE REGISTRO:`);
+            campos.forEach(campo => {
+                console.log(`   ${campo}: ${typeof data[0][campo]} = ${data[0][campo]}`);
+            });
+            
         } else {
             console.log(`⚠️ Tabela ${tableName} está vazia`);
             
@@ -1910,17 +1919,17 @@ async function debugTableSchema(tableName) {
 async function debugEmptyTable(tableName) {
     console.log(`🧪 Testando inserção mínima em ${tableName}...`);
     
-    // Dados de teste básicos para cada tabela
+    // Dados de teste básicos para cada tabela (versão melhorada)
     const testData = {
         users: {
             role: 'intern',
-            username: 'test_user',
+            username: 'test_user_' + Date.now(),
             password: 'test123',
             name: 'Test User'
         },
         clients: {
             type: 'adult',
-            name: 'Cliente Teste',
+            name: 'Cliente Teste ' + Date.now(),
             phone: '123456789'
         },
         schedules: {
@@ -1932,42 +1941,51 @@ async function debugEmptyTable(tableName) {
         appointments: {
             client_id: 1,
             date: '2024-01-01',
-            time: '10:00'
+            time: '10:00',
+            notes: 'Teste'
         },
         daily_notes: {
             date: '2024-01-01',
             category: 'receita',
-            title: 'Teste',
-            content: 'Conteúdo teste'
+            title: 'Teste ' + Date.now(),
+            content: 'Conteúdo teste',
+            value: 100,
+            created_by: 'Admin'
         },
         general_documents: {
-            title: 'Documento Teste',
+            title: 'Documento Teste ' + Date.now(),
             type: 'document',
             content: 'Conteúdo teste'
         },
         anamnesis_types: {
-            name: 'Tipo Teste'
+            name: 'Tipo Teste ' + Date.now()
         },
         stock_items: {
-            name: 'Item Teste',
+            name: 'Item Teste ' + Date.now(),
             category: 'material',
-            quantity: 10
+            quantity: 10,
+            unit: 'unidade'
         },
         stock_movements: {
             stock_item_id: 1,
             type: 'entrada',
             quantity: 5,
-            reason: 'Teste'
+            reason: 'Teste',
+            date: '2024-01-01',
+            created_by: 'Admin'
         },
         client_notes: {
             client_id: 1,
-            title: 'Nota Teste',
-            content: 'Conteúdo teste'
+            title: 'Nota Teste ' + Date.now(),
+            content: 'Conteúdo teste',
+            created_by: 'Admin'
         },
         client_documents: {
             client_id: 1,
-            title: 'Documento Teste',
-            file_name: 'teste.pdf'
+            title: 'Documento Teste ' + Date.now(),
+            // Testando diferentes nomes para o campo arquivo
+            filename: 'teste.pdf',
+            file_data: 'data:text/plain;base64,dGVzdGU='
         }
     };
     
@@ -1977,7 +1995,10 @@ async function debugEmptyTable(tableName) {
         return;
     }
     
-    console.log(`📋 Dados de teste:`, data);
+    console.log(`📋 DADOS DE TESTE:`);
+    Object.keys(data).forEach(campo => {
+        console.log(`   ${campo}: ${typeof data[campo]} = ${data[campo]}`);
+    });
     
     const { data: insertData, error: insertError } = await supabase
         .from(tableName)
@@ -1985,15 +2006,68 @@ async function debugEmptyTable(tableName) {
         .select();
     
     if (insertError) {
-        console.error(`❌ Erro ao inserir em ${tableName} (mostra campos obrigatórios):`, insertError);
+        console.error(`❌ ERRO DETALHADO em ${tableName}:`);
+        console.error(`   Código: ${insertError.code}`);
+        console.error(`   Mensagem: ${insertError.message}`);
+        console.error(`   Detalhes:`, insertError.details);
+        console.error(`   Dica:`, insertError.hint);
+        
+        // Tentar descobrir campos corretos testando variações
+        if (tableName === 'client_documents' && insertError.message.includes('file_name')) {
+            console.log('🔧 Testando nomes alternativos para arquivo...');
+            await testClientDocumentsFields();
+        }
+        
     } else if (insertData && insertData.length > 0) {
-        console.log(`✅ Registro de teste inserido em ${tableName}!`);
-        console.log(`📋 Campos retornados:`, Object.keys(insertData[0]));
-        console.log(`📄 Registro completo:`, insertData[0]);
+        console.log(`✅ SUCESSO! Registro inserido em ${tableName}:`);
+        
+        const campos = Object.keys(insertData[0]);
+        console.log(`📋 CAMPOS RETORNADOS (${campos.length}):`, campos.join(', '));
+        
+        console.log(`📄 REGISTRO COMPLETO:`);
+        campos.forEach(campo => {
+            console.log(`   ${campo}: ${typeof insertData[0][campo]} = ${insertData[0][campo]}`);
+        });
         
         // Deletar o registro de teste
         await supabase.from(tableName).delete().eq('id', insertData[0].id);
         console.log(`🗑️ Registro de teste removido de ${tableName}`);
+    }
+}
+
+// Função específica para testar campos de client_documents
+async function testClientDocumentsFields() {
+    const variations = [
+        { filename: 'teste.pdf' },
+        { file_name: 'teste.pdf' },
+        { name: 'teste.pdf' },
+        { document_name: 'teste.pdf' },
+        { title: 'Documento', filename: 'teste.pdf' },
+        { title: 'Documento', name: 'teste.pdf' }
+    ];
+    
+    for (const variation of variations) {
+        const testData = {
+            client_id: 1,
+            title: 'Teste ' + Date.now(),
+            ...variation
+        };
+        
+        console.log('🧪 Testando variação:', variation);
+        
+        const { data, error } = await supabase
+            .from('client_documents')
+            .insert([testData])
+            .select();
+        
+        if (!error && data) {
+            console.log('✅ SUCESSO com:', variation);
+            console.log('📋 Campos retornados:', Object.keys(data[0]));
+            await supabase.from('client_documents').delete().eq('id', data[0].id);
+            break;
+        } else {
+            console.log('❌ Falhou com:', variation, error.message);
+        }
     }
 }
 
