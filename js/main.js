@@ -1194,8 +1194,7 @@ async function addStockItem() {
         unit: 'unidade',
         unit_value: unitValue,
         description: description,
-        created_at: new Date().toISOString(),
-        created_by: getCurrentUser().name
+        created_at: new Date().toISOString()
     };
 
     // Usar Supabase para salvar item
@@ -1209,8 +1208,6 @@ async function addStockItem() {
             type: 'entrada',
             quantity: quantity,
             reason: 'Adição inicial de estoque',
-            date: new Date().toISOString(),
-            user: getCurrentUser().name,
             item_unit_value: unitValue
         };
 
@@ -1274,8 +1271,6 @@ async function processStockAdjustment() {
             type: action === 'add' ? 'entrada' : 'saida',
             quantity: quantity,
             reason: reason,
-            date: new Date().toISOString(),
-            user: getCurrentUser().name,
             item_unit_value: item.unit_value || item.unitValue
         };
 

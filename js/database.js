@@ -1200,8 +1200,7 @@ export const stockItems = {
                 // Mapeamento correto dos campos
                 min_stock: itemData.min_stock || itemData.minStock,
                 unit_value: itemData.unit_value || itemData.unitValue,
-                created_at: itemData.created_at || itemData.createdAt || new Date().toISOString(),
-                created_by: itemData.created_by || itemData.createdBy
+                created_at: itemData.created_at || itemData.createdAt || new Date().toISOString()
             };
             
             // Remover campos que podem não existir no schema
@@ -1369,13 +1368,12 @@ export const stockMovements = {
             const processedData = {
                 ...movementData,
                 // Mapeamento correto dos campos
-                stock_item_id: movementData.stock_item_id || movementData.stockItemId,
-                created_at: movementData.created_at || movementData.createdAt || new Date().toISOString(),
-                created_by: movementData.created_by || movementData.createdBy
+                item_id: movementData.item_id || movementData.itemId,
+                created_at: movementData.created_at || movementData.createdAt || new Date().toISOString()
             };
             
             // Remover campos que podem não existir no schema
-            delete processedData.stockItemId;
+            delete processedData.itemId;
             delete processedData.createdAt;
             delete processedData.createdBy;
             
