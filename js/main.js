@@ -73,6 +73,12 @@ window.assignInternToClient = assignInternToClient; // Make assign intern functi
 window.unassignInternFromClient = unassignInternFromClient; // Make unassign intern function global
 window.deleteClient = deleteClient; // Make delete client function global
 
+// DEBUG: Função global para verificar schemas
+window.debugSchemas = async () => {
+    const { debugAllSchemas } = await import('./database.js');
+    await debugAllSchemas();
+};
+
 // Initialize application
 document.addEventListener('DOMContentLoaded', () => {
     loadDb();
@@ -88,6 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setupFormHandlers();
     setupMobileGestures(); // Initialize mobile gestures
+    
+    // DEBUG: Atalho de teclado para executar debug (Ctrl+Shift+D)
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+            console.log('🔍 Executando debug de schemas...');
+            window.debugSchemas();
+        }
+    });
 });
 
 function initializeApp() {
@@ -95,9 +109,9 @@ function initializeApp() {
     initializeCalendar();
     renderClientList();
     
-    // DEBUG: Verificar schema da tabela schedules
-    import('./database.js').then(({ debugSchedulesSchema }) => {
-        debugSchedulesSchema();
+    // DEBUG: Verificar schema de TODAS as tabelas
+    import('./database.js').then(({ debugAllSchemas }) => {
+        debugAllSchemas();
     });
     
     const currentUser = getCurrentUser();

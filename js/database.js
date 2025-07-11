@@ -1852,5 +1852,150 @@ export async function debugSchedulesSchema() {
     }
 }
 
+// ==================== DEBUG ALL SCHEMAS ====================
+export async function debugAllSchemas() {
+    console.log('🚀 === DEBUG: Verificando schema de TODAS as tabelas ===');
+    
+    const tables = [
+        'users',
+        'clients', 
+        'schedules',
+        'appointments',
+        'daily_notes',
+        'general_documents',
+        'anamnesis_types',
+        'stock_items',
+        'stock_movements',
+        'client_notes',
+        'client_documents'
+    ];
+    
+    for (const tableName of tables) {
+        await debugTableSchema(tableName);
+        console.log('---'.repeat(20));
+    }
+}
+
+async function debugTableSchema(tableName) {
+    try {
+        console.log(`🔍 === TABELA: ${tableName.toUpperCase()} ===`);
+        
+        // Buscar registros existentes
+        const { data, error } = await supabase
+            .from(tableName)
+            .select('*')
+            .limit(3);
+        
+        if (error) {
+            console.error(`❌ Erro ao buscar ${tableName}:`, error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            console.log(`✅ Encontrados ${data.length} registros em ${tableName}`);
+            console.log(`📋 Campos disponíveis:`, Object.keys(data[0]));
+            console.log(`📄 Exemplo de registro:`, data[0]);
+        } else {
+            console.log(`⚠️ Tabela ${tableName} está vazia`);
+            
+            // Para tabelas vazias, tentar inserir um registro mínimo para descobrir campos obrigatórios
+            await debugEmptyTable(tableName);
+        }
+        
+    } catch (error) {
+        console.error(`💥 Erro no debug da tabela ${tableName}:`, error);
+    }
+}
+
+async function debugEmptyTable(tableName) {
+    console.log(`🧪 Testando inserção mínima em ${tableName}...`);
+    
+    // Dados de teste básicos para cada tabela
+    const testData = {
+        users: {
+            role: 'intern',
+            username: 'test_user',
+            password: 'test123',
+            name: 'Test User'
+        },
+        clients: {
+            type: 'adult',
+            name: 'Cliente Teste',
+            phone: '123456789'
+        },
+        schedules: {
+            client_id: 1,
+            date: '2024-01-01',
+            time: '10:00',
+            status: 'agendado'
+        },
+        appointments: {
+            client_id: 1,
+            date: '2024-01-01',
+            time: '10:00'
+        },
+        daily_notes: {
+            date: '2024-01-01',
+            category: 'receita',
+            title: 'Teste',
+            content: 'Conteúdo teste'
+        },
+        general_documents: {
+            title: 'Documento Teste',
+            type: 'document',
+            content: 'Conteúdo teste'
+        },
+        anamnesis_types: {
+            name: 'Tipo Teste'
+        },
+        stock_items: {
+            name: 'Item Teste',
+            category: 'material',
+            quantity: 10
+        },
+        stock_movements: {
+            stock_item_id: 1,
+            type: 'entrada',
+            quantity: 5,
+            reason: 'Teste'
+        },
+        client_notes: {
+            client_id: 1,
+            title: 'Nota Teste',
+            content: 'Conteúdo teste'
+        },
+        client_documents: {
+            client_id: 1,
+            title: 'Documento Teste',
+            file_name: 'teste.pdf'
+        }
+    };
+    
+    const data = testData[tableName];
+    if (!data) {
+        console.log(`⚠️ Sem dados de teste definidos para ${tableName}`);
+        return;
+    }
+    
+    console.log(`📋 Dados de teste:`, data);
+    
+    const { data: insertData, error: insertError } = await supabase
+        .from(tableName)
+        .insert([data])
+        .select();
+    
+    if (insertError) {
+        console.error(`❌ Erro ao inserir em ${tableName} (mostra campos obrigatórios):`, insertError);
+    } else if (insertData && insertData.length > 0) {
+        console.log(`✅ Registro de teste inserido em ${tableName}!`);
+        console.log(`📋 Campos retornados:`, Object.keys(insertData[0]));
+        console.log(`📄 Registro completo:`, insertData[0]);
+        
+        // Deletar o registro de teste
+        await supabase.from(tableName).delete().eq('id', insertData[0].id);
+        console.log(`🗑️ Registro de teste removido de ${tableName}`);
+    }
+}
+
 // Inicializar automaticamente quando o módulo é carregado
 initializeDatabase();
