@@ -39,7 +39,7 @@ export function renderStockList() {
         
         // Count normal and low stock items in category
         const lowStockInCategory = categories[category].filter(item => {
-            return item.quantity > 0 && item.quantity <= item.minStock;
+            return item.quantity > 0 && item.quantity <= item.min_stock;
         }).length;
         const outOfStockInCategory = categories[category].filter(item => {
             return item.quantity === 0;
@@ -75,7 +75,7 @@ export function renderStockList() {
             const displayQuantity = item.quantity;
             const displayUnit = 'unidade';
             
-            const isLowStock = item.quantity > 0 && item.quantity <= item.minStock;
+            const isLowStock = item.quantity > 0 && item.quantity <= item.min_stock;
             const isOutOfStock = item.quantity === 0;
             const stockStatus = isOutOfStock ? 'out-of-stock' : isLowStock ? 'low-stock' : 'normal-stock';
             
@@ -103,10 +103,10 @@ export function renderStockList() {
                 <div class="stock-item-details">
                     ${item.description ? `<p class="stock-description">${item.description}</p>` : ''}
                     <div class="stock-meta">
-                        <small>Estoque mínimo: ${item.minStock} unidades</small>
-                        <small>Valor unitário: R$ ${item.unitValue.toFixed(2).replace('.', ',')}</small>
-                        <small>Valor total: R$ ${(item.quantity * item.unitValue).toFixed(2).replace('.', ',')}</small>
-                        ${isLowStock && !isOutOfStock ? `<span class="stock-deficit">Faltam ${item.minStock - item.quantity} unidades</span>` : ''}
+                        <small>Estoque mínimo: ${item.min_stock} unidades</small>
+                        <small>Valor unitário: R$ ${item.unit_value.toFixed(2).replace('.', ',')}</small>
+                        <small>Valor total: R$ ${(item.quantity * item.unit_value).toFixed(2).replace('.', ',')}</small>
+                        ${isLowStock && !isOutOfStock ? `<span class="stock-deficit">Faltam ${item.min_stock - item.quantity} unidades</span>` : ''}
                     </div>
                 </div>
                 <div class="stock-item-actions">
@@ -142,13 +142,13 @@ export function renderStockMovements(selectedMonthYear = null) {
     if (selectedMonthYear) {
         const [targetYear, targetMonth] = selectedMonthYear.split('-').map(Number);
         filteredMovements = db.stockMovements.filter(movement => {
-            const movementDate = new Date(movement.date);
+            const movementDate = new Date(movement.created_at);
             return movementDate.getMonth() === (targetMonth - 1) && movementDate.getFullYear() === targetYear;
         });
     }
     
     // Sort movements by date (newest first)
-    const sortedMovements = [...filteredMovements].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedMovements = [...filteredMovements].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     // Calculate month summary
     let monthEntries = 0;
@@ -157,7 +157,7 @@ export function renderStockMovements(selectedMonthYear = null) {
     let monthExitsValue = 0;
     
     filteredMovements.forEach(movement => {
-        const movementValue = (movement.quantity || 0) * (movement.itemUnitValue || 0);
+        const movementValue = (movement.quantity || 0) * (movement.item_unit_value || 0);
         if (movement.type === 'entrada') {
             monthEntries++;
             monthEntriesValue += movementValue;
@@ -214,7 +214,7 @@ export function renderStockMovements(selectedMonthYear = null) {
         // Display quantity correctly, assuming all quantities are now in 'unidade'
         const displayQuantity = movement.quantity;
         const displayUnit = 'unidade';
-        const movementValue = (movement.quantity * (movement.itemUnitValue || 0)).toFixed(2).replace('.', ',');
+        const movementValue = (movement.quantity * (movement.item_unit_value || 0)).toFixed(2).replace('.', ',');
         
         let typeText = '';
         let typeClass = '';
@@ -232,7 +232,7 @@ export function renderStockMovements(selectedMonthYear = null) {
 
         movementCard.innerHTML = `
             <div class="movement-info">
-                <h5>${movement.itemName || 'Item removido'}</h5>
+                <h5>${movement.item_name || 'Item removido'}</h5>
                 <div class="movement-details">
                     <span class="movement-type ${typeClass}">${typeText}</span>
                     ${movement.type !== 'exclusao' ? `<span class="movement-quantity">${displayQuantity} ${displayUnit}s - R$ ${movementValue}</span>` : ''}
@@ -240,8 +240,8 @@ export function renderStockMovements(selectedMonthYear = null) {
                 <p class="movement-reason">${movement.reason}</p>
             </div>
             <div class="movement-meta">
-                <div class="movement-date">${new Date(movement.date).toLocaleDateString('pt-BR')}</div>
-                <div class="movement-user">${movement.user}</div>
+                <div class="movement-date">${new Date(movement.created_at).toLocaleDateString('pt-BR')}</div>
+                <div class="movement-user">${movement.created_by || 'Sistema'}</div>
             </div>
         `;
         
@@ -251,7 +251,7 @@ export function renderStockMovements(selectedMonthYear = null) {
 
 export function updateStockSummary() {
     const totalItems = db.stockItems.reduce((sum, item) => sum + item.quantity, 0);
-    const lowStockItems = db.stockItems.filter(item => item.quantity > 0 && item.quantity <= item.minStock).length;
+    const lowStockItems = db.stockItems.filter(item => item.quantity > 0 && item.quantity <= item.min_stock).length;
     const outOfStockItems = db.stockItems.filter(item => item.quantity === 0).length;
     
     const totalItemsElement = document.getElementById('total-items');
