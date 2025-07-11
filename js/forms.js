@@ -84,7 +84,6 @@ function setupClientForms() {
         
         try {
             const newClient = {
-                id: db.nextClientId++,
                 type: 'adult',
                 name: document.getElementById('nome-cliente-adulto').value,
                 email: document.getElementById('email-cliente-adulto').value,
@@ -121,12 +120,19 @@ function setupClientForms() {
                 return;
             }
             
-            db.clients.push(newClient);
-            saveDb();
-            e.target.reset();
-            showNotification(`Cliente "${newClient.name}" cadastrado com sucesso!`, 'success');
-            renderClientList();
-            switchTab('historico');
+            // Usar nova API do Supabase
+            import('./database.js').then(async ({ clients }) => {
+                const savedClient = await clients.create(newClient);
+                if (savedClient) {
+                    e.target.reset();
+                    showNotification(`Cliente "${newClient.name}" cadastrado com sucesso!`, 'success');
+                    renderClientList();
+                    switchTab('historico');
+                } else {
+                    showNotification('Erro ao cadastrar cliente. Tente novamente.', 'error');
+                }
+            });
+            return;
         } catch (error) {
             console.error('Erro ao cadastrar cliente adulto:', error);
             showNotification('Erro ao cadastrar cliente. Tente novamente.', 'error');
@@ -138,7 +144,6 @@ function setupClientForms() {
         
         try {
             const newClient = {
-                id: db.nextClientId++,
                 type: 'minor',
                 name: document.getElementById('nome-cliente-menor').value,
                 birthDate: document.getElementById('data-nascimento-menor').value,
@@ -179,12 +184,19 @@ function setupClientForms() {
                 return;
             }
             
-            db.clients.push(newClient);
-            saveDb();
-            e.target.reset();
-            showNotification(`Cliente "${newClient.name}" cadastrado com sucesso!`, 'success');
-            renderClientList();
-            switchTab('historico');
+            // Usar nova API do Supabase
+            import('./database.js').then(async ({ clients }) => {
+                const savedClient = await clients.create(newClient);
+                if (savedClient) {
+                    e.target.reset();
+                    showNotification(`Cliente "${newClient.name}" cadastrado com sucesso!`, 'success');
+                    renderClientList();
+                    switchTab('historico');
+                } else {
+                    showNotification('Erro ao cadastrar cliente. Tente novamente.', 'error');
+                }
+            });
+            return;
         } catch (error) {
             console.error('Erro ao cadastrar cliente menor:', error);
             showNotification('Erro ao cadastrar cliente. Tente novamente.', 'error');
