@@ -1,7 +1,7 @@
 // Main application entry point
 import { loadDb, saveDb, db } from './database.js';
 import { login, logout, checkLogin, getCurrentUser } from './auth.js';
-import { showLoginScreen, showMainApp, switchTab, updateCurrentDate, showNotification } from './ui.js'; // Import showNotification
+import { showLoginScreen, showMainApp, switchTab, updateCurrentDate, showNotification, toggleMobileMenu, closeMobileMenu } from './ui.js'; // Import showNotification
 import { renderClientList, showClientDetails, addClientNote, addClientDocument, deleteClientDocument, renderMeusPacientes, renderClientReport } from './clients.js';
 import { renderSchedule, updateScheduleStatus, initializeCalendar, renderCalendar, saveEditedSchedule, cancelScheduleWithReason, reassignSchedule, populateAssignableUsers, serviceNames } from './schedule.js'; // Import serviceNames
 import { renderFinancialReport, renderDailyNotes, addDailyNote, generateDetailedFinancialReport } from './financial.js'; // Updated import
@@ -140,6 +140,25 @@ function setupEventListeners() {
     document.getElementById('btn-logout').addEventListener('click', () => {
         logout();
         showLoginScreen();
+    });
+
+    // Mobile menu toggle
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const navWrapper = document.querySelector('.nav-wrapper');
+        const mobileToggle = document.getElementById('mobile-menu-toggle');
+        
+        if (navWrapper && mobileToggle && 
+            navWrapper.classList.contains('mobile-menu-open') &&
+            !navWrapper.contains(e.target) && 
+            !mobileToggle.contains(e.target)) {
+            closeMobileMenu();
+        }
     });
 
     // Tab navigation

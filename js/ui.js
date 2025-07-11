@@ -47,6 +47,46 @@ export function switchTab(tabId) {
 
     document.getElementById(`tab-${tabId}`).classList.add('active');
     document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    
+    // Close mobile menu when tab is selected
+    closeMobileMenu();
+}
+
+export function toggleMobileMenu() {
+    const navWrapper = document.querySelector('.nav-wrapper');
+    const mobileToggle = document.getElementById('mobile-menu-toggle');
+    
+    if (navWrapper && mobileToggle) {
+        const isOpen = navWrapper.classList.contains('mobile-menu-open');
+        
+        if (isOpen) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
+        }
+    }
+}
+
+export function openMobileMenu() {
+    const navWrapper = document.querySelector('.nav-wrapper');
+    const mobileToggle = document.getElementById('mobile-menu-toggle');
+    
+    if (navWrapper && mobileToggle) {
+        navWrapper.classList.add('mobile-menu-open');
+        mobileToggle.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling when menu is open
+    }
+}
+
+export function closeMobileMenu() {
+    const navWrapper = document.querySelector('.nav-wrapper');
+    const mobileToggle = document.getElementById('mobile-menu-toggle');
+    
+    if (navWrapper && mobileToggle) {
+        navWrapper.classList.remove('mobile-menu-open');
+        mobileToggle.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
 }
 
 export function closeModal(modal) {

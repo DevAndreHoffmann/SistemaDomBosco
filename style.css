@@ -84,6 +84,12 @@ body {
     margin: 0;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .user-info {
     display: flex;
     align-items: center;
@@ -94,6 +100,33 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.mobile-menu-toggle.active {
+    background: var(--primary-hover);
+}
+
+.mobile-menu-toggle.active i::before {
+    content: "\f00d"; /* fa-times icon */
 }
 
 .user-info span {
@@ -2961,52 +2994,103 @@ form legend {
     }
     
     .header-top {
-        flex-direction: column; 
-        justify-content: center;
+        flex-direction: row;
+        justify-content: space-between;
         align-items: center;
         padding: 12px 16px; 
         margin-bottom: 0; 
-        text-align: center;
         gap: 12px;
     }
     
     .header-top h1 {
-        font-size: 1.5rem;
-        text-align: center;
+        font-size: 1.3rem;
         margin: 0;
+    }
+
+    .header-logo {
+        flex-shrink: 0;
+    }
+
+    .header-logo img {
+        height: 40px;
+    }
+
+    .header-right {
+        gap: 12px;
+    }
+
+    .user-info {
+        display: none;
+    }
+
+    .mobile-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .nav-wrapper {
-        border-bottom-left-radius: 0; 
-        border-bottom-right-radius: 0;
-        padding: 0 8px;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--surface-color);
+        border-top: 1px solid var(--border-color);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-100%);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 998;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .nav-wrapper.mobile-menu-open {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .nav-wrapper::before,
+    .nav-wrapper::after {
+        display: none;
     }
     
     nav {
-        justify-content: flex-start;
-        flex-wrap: nowrap;
-        gap: 4px;
-        min-height: 60px;
-        align-items: center;
+        flex-direction: column;
+        padding: 12px;
+        gap: 8px;
+        overflow: visible;
     }
     
     .tab-button {
-        font-size: 0.75rem; 
-        padding: 8px 12px; 
-        flex-direction: column;
-        gap: 4px;
-        text-align: center;
-        min-width: 80px;
-        white-space: nowrap;
+        width: 100%;
+        justify-content: flex-start;
+        padding: 16px;
+        border-radius: var(--radius-md);
+        border-bottom: none;
+        background: transparent;
+        transition: all 0.2s ease;
+    }
+
+    .tab-button:hover {
+        background-color: var(--background-color);
+    }
+
+    .tab-button.active {
+        background-color: var(--primary-color);
+        color: white;
     }
     
     .tab-button i {
-        font-size: 1rem; 
+        font-size: 1.1rem; 
+        margin-right: 12px;
     }
     
     .tab-button span {
-        font-size: 0.7rem;
-        line-height: 1.2;
+        font-size: 0.9rem;
     }
     
     .tab-content {
@@ -3447,23 +3531,22 @@ form legend {
 }
 
 .login-badge {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+    position: relative;
+    margin: 0 auto 24px auto;
     background: linear-gradient(45deg, var(--login-text), var(--login-button-bg));
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    border-radius: var(--radius-lg);
+    width: 120px;
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
 }
 
 .login-badge img {
-    width: 80%;
-    height: 80%;
+    width: 90%;
+    height: 90%;
     object-fit: contain;
 }
 
