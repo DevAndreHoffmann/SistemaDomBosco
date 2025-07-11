@@ -1,12 +1,11 @@
 // Database module for neuropsychology system - Supabase Migration
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// Configuração do Supabase
-const SUPABASE_URL = 'https://your-project-id.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
+// Importar configurações do Supabase
+import { SUPABASE_CONFIG } from './config.js';
 
 // Criar cliente Supabase
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
 
 // Estado de loading global
 let isLoading = false;

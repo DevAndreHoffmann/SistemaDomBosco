@@ -20,20 +20,14 @@
 5. Cole no editor SQL
 6. Clique em "Run" para executar
 
-### 3. **Configurar as Credenciais**
-1. No painel do Supabase, vá em "Settings" → "API"
-2. Copie:
-   - **Project URL**: `https://seu-projeto-id.supabase.co`
-   - **Anon/Public Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+### 3. **Credenciais Já Configuradas** ✅
+As credenciais do Supabase já foram configuradas no arquivo `js/config.js`:
 
-### 4. **Atualizar o Database.js**
-No arquivo `js/database.js`, atualize as linhas 4-5:
+- **Project URL**: `https://ociltyicsrrgzdpdgeva.supabase.co`
+- **Anon/Public Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jaWx0eWljc3JyZ3pkcGRnZXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyNDE5NTUsImV4cCI6MjA2NzgxNzk1NX0.98vWfX8j0VjcY2Y4RSz80wFymLY-By_8OsHqSdMSjfY`
 
-```javascript
-// Substitua pelos seus valores reais
-const SUPABASE_URL = 'https://seu-projeto-id.supabase.co';
-const SUPABASE_ANON_KEY = 'sua-chave-anonima-aqui';
-```
+### 4. **Configuração de Segurança** 🔐
+O arquivo `js/config.js` está protegido no `.gitignore` para manter as credenciais seguras. Para referência futura, use o arquivo `js/config.example.js`.
 
 ### 5. **Configurar CORS (se necessário)**
 Se estiver rodando localmente ou tendo problemas de CORS:

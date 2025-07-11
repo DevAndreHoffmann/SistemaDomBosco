@@ -1,11 +1,8 @@
--- Schema SQL para Sistema Dom Bosco - Supabase Migration
+-- Schema SQL para Sistema Dom Bosco - Supabase Migration (Versão Simplificada)
 -- Baseado na estrutura do database.js atual
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Enable RLS (Row Level Security) 
-ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret-key';
 
 -- 1. USERS TABLE
 CREATE TABLE users (
@@ -199,7 +196,7 @@ CREATE TABLE client_change_history (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- INDEXES para performance
+-- Indexes para melhor performance
 CREATE INDEX idx_clients_type ON clients(type);
 CREATE INDEX idx_clients_assigned_intern ON clients(assigned_intern_id);
 CREATE INDEX idx_appointments_client_id ON appointments(client_id);
@@ -214,7 +211,7 @@ CREATE INDEX idx_client_notes_client_id ON client_notes(client_id);
 CREATE INDEX idx_client_documents_client_id ON client_documents(client_id);
 CREATE INDEX idx_client_change_history_client_id ON client_change_history(client_id);
 
--- TRIGGERS para updated_at
+-- Função para atualizar timestamp automaticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -223,6 +220,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Triggers para atualizar updated_at automaticamente
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -252,153 +250,6 @@ CREATE TRIGGER update_client_notes_updated_at BEFORE UPDATE ON client_notes
 
 CREATE TRIGGER update_client_documents_updated_at BEFORE UPDATE ON client_documents
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- RLS Policies (Row Level Security)
--- Usuários só podem acessar dados que têm permissão baseado no papel
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
-ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE general_documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE stock_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE stock_movements ENABLE ROW LEVEL SECURITY;
-ALTER TABLE client_notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE client_documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE client_change_history ENABLE ROW LEVEL SECURITY;
-
--- Policies básicas - permitir acesso autenticado
-CREATE POLICY "Enable read access for authenticated users" ON users
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON clients
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON appointments
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON schedules
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON daily_notes
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON general_documents
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON stock_items
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON stock_movements
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON client_notes
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON client_documents
-    FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable read access for authenticated users" ON client_change_history
-    FOR SELECT USING (auth.role() = 'authenticated');
-
--- Policies para inserção e atualização
-CREATE POLICY "Enable insert for authenticated users" ON users
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON clients
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON appointments
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON schedules
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON daily_notes
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON general_documents
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON stock_items
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON stock_movements
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON client_notes
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON client_documents
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable insert for authenticated users" ON client_change_history
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
--- Policies para update
-CREATE POLICY "Enable update for authenticated users" ON users
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON clients
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON appointments
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON schedules
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON daily_notes
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON general_documents
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON stock_items
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON stock_movements
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON client_notes
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable update for authenticated users" ON client_documents
-    FOR UPDATE USING (auth.role() = 'authenticated');
-
--- Policies para delete
-CREATE POLICY "Enable delete for authenticated users" ON users
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON clients
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON appointments
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON schedules
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON daily_notes
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON general_documents
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON stock_items
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON stock_movements
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON client_notes
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON client_documents
-    FOR DELETE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Enable delete for authenticated users" ON client_change_history
-    FOR DELETE USING (auth.role() = 'authenticated');
 
 -- Inserir dados iniciais
 INSERT INTO anamnesis_types (id, name) VALUES
