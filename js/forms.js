@@ -88,15 +88,15 @@ function setupClientForms() {
                 name: document.getElementById('nome-cliente-adulto').value,
                 email: document.getElementById('email-cliente-adulto').value,
                 phone: document.getElementById('telefone-cliente-adulto').value,
-                birthDate: document.getElementById('data-nascimento-adulto').value,
+                birth_date: document.getElementById('data-nascimento-adulto').value,
                 gender: document.getElementById('genero-adulto').value,
                 cpf: document.getElementById('cpf-cliente-adulto').value,
                 rg: document.getElementById('rg-adulto').value,
                 naturalidade: document.getElementById('naturalidade-adulto').value,
-                estadoCivil: document.getElementById('estado-civil-adulto').value,
+                estado_civil: document.getElementById('estado-civil-adulto').value,
                 escolaridade: document.getElementById('escolaridade-adulto').value,
                 profissao: document.getElementById('profissao-adulto').value,
-                contatoEmergencia: document.getElementById('contato-emergencia-adulto').value,
+                contato_emergencia: document.getElementById('contato-emergencia-adulto').value,
                 cep: document.getElementById('cep-cliente-adulto').value,
                 address: document.getElementById('logradouro-cliente-adulto').value,
                 number: document.getElementById('numero-cliente-adulto').value,
@@ -104,18 +104,10 @@ function setupClientForms() {
                 neighborhood: document.getElementById('bairro-cliente-adulto').value,
                 city: document.getElementById('cidade-cliente-adulto').value,
                 state: document.getElementById('estado-cidade-adulto').value,
-                observations: document.getElementById('observacoes-cliente-adulto').value,
-                diagnosticoPrincipal: document.getElementById('diagnostico-principal-adulto').value,
-                historicoMedico: document.getElementById('historico-medico-adulto').value,
-                queixaNeuropsicologica: document.getElementById('queixa-neuropsicologica-adulto').value,
-                expectativasTratamento: document.getElementById('expectativas-tratamento-adulto').value,
-                appointments: [],
-                notes: [],
-                documents: [],
-                changeHistory: []
+                observations: document.getElementById('observacoes-cliente-adulto').value
             };
             
-            if (!newClient.name || !newClient.birthDate) {
+            if (!newClient.name || !newClient.birth_date) {
                 showNotification('Por favor, preencha pelo menos o nome e data de nascimento.', 'warning');
                 return;
             }
@@ -146,21 +138,13 @@ function setupClientForms() {
             const newClient = {
                 type: 'minor',
                 name: document.getElementById('nome-cliente-menor').value,
-                birthDate: document.getElementById('data-nascimento-menor').value,
+                birth_date: document.getElementById('data-nascimento-menor').value,
                 gender: document.getElementById('genero-menor').value,
-                escola: document.getElementById('escola-menor').value,
-                tipoEscola: document.getElementById('tipo-escola-menor').value,
-                anoEscolar: document.getElementById('ano-escolar-menor').value,
-                nomePai: document.getElementById('nome-pai').value,
-                idadePai: document.getElementById('idade-pai').value,
-                profissaoPai: document.getElementById('profissao-pai').value,
-                telefonePai: document.getElementById('telefone-pai').value,
-                nomeMae: document.getElementById('nome-mae').value,
-                idadeMae: document.getElementById('idade-mae').value,
-                profissaoMae: document.getElementById('profissao-mae').value,
-                telefoneMae: document.getElementById('telefone-mae').value,
-                responsavelFinanceiro: document.getElementById('responsavel-financeiro').value,
-                outroResponsavel: document.getElementById('outro-responsavel').value,
+                school_name: document.getElementById('escola-menor').value,
+                school_grade: document.getElementById('ano-escolar-menor').value,
+                school_period: document.getElementById('tipo-escola-menor').value,
+                responsible_name: document.getElementById('nome-pai').value || document.getElementById('nome-mae').value,
+                responsible_phone: document.getElementById('telefone-pai').value || document.getElementById('telefone-mae').value,
                 cep: document.getElementById('cep-cliente-menor').value,
                 address: document.getElementById('logradouro-cliente-menor').value,
                 number: document.getElementById('numero-cliente-menor').value,
@@ -168,18 +152,10 @@ function setupClientForms() {
                 neighborhood: document.getElementById('bairro-cliente-menor').value,
                 city: document.getElementById('cidade-cliente-menor').value,
                 state: document.getElementById('estado-cliente-menor').value,
-                observations: document.getElementById('observacoes-cliente-menor').value,
-                diagnosticoPrincipal: document.getElementById('diagnostico-principal-menor').value,
-                historicoMedico: document.getElementById('historico-medico-menor').value,
-                queixaNeuropsicologica: document.getElementById('queixa-neuropsicologica-menor').value,
-                expectativasTratamento: document.getElementById('expectativas-tratamento-menor').value,
-                appointments: [],
-                notes: [],
-                documents: [],
-                changeHistory: []
+                observations: document.getElementById('observacoes-cliente-menor').value
             };
             
-            if (!newClient.name || !newClient.birthDate) {
+            if (!newClient.name || !newClient.birth_date) {
                 showNotification('Por favor, preencha pelo menos o nome e data de nascimento.', 'warning');
                 return;
             }
