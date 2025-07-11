@@ -95,6 +95,11 @@ function initializeApp() {
     initializeCalendar();
     renderClientList();
     
+    // DEBUG: Verificar schema da tabela schedules
+    import('./database.js').then(({ debugSchedulesSchema }) => {
+        debugSchedulesSchema();
+    });
+    
     const currentUser = getCurrentUser();
     if (currentUser.role === 'coordinator') {
         // Set initial value for financial period selector to 'current-month' and render

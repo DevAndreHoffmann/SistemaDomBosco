@@ -1807,5 +1807,58 @@ export function loadDb() {
     console.log('loadDb() chamado - dados são carregados automaticamente do Supabase');
 }
 
+// ==================== DEBUG SCHEMA ====================
+export async function debugSchedulesSchema() {
+    try {
+        console.log('=== DEBUG: Verificando schema da tabela schedules ===');
+        
+        // Tentar buscar um registro para ver os campos disponíveis
+        const { data, error } = await supabase
+            .from('schedules')
+            .select('*')
+            .limit(1);
+        
+        if (error) {
+            console.error('Erro ao buscar dados:', error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            console.log('Campos disponíveis na tabela schedules:');
+            console.log(Object.keys(data[0]));
+            console.log('Exemplo de registro:');
+            console.log(data[0]);
+        } else {
+            console.log('Tabela schedules está vazia');
+        }
+        
+        // Tentar criar um registro de teste para ver quais campos são aceitos
+        const testData = {
+            client_id: 1,
+            date: '2024-01-01',
+            time: '10:00',
+            status: 'agendado',
+            observations: 'teste'
+        };
+        
+        console.log('Tentando inserir registro de teste...');
+        const { data: insertData, error: insertError } = await supabase
+            .from('schedules')
+            .insert([testData])
+            .select();
+        
+        if (insertError) {
+            console.error('Erro ao inserir (isso nos mostra os campos obrigatórios):', insertError);
+        } else {
+            console.log('Registro de teste inserido com sucesso:', insertData);
+            // Deletar o registro de teste
+            await supabase.from('schedules').delete().eq('id', insertData[0].id);
+        }
+        
+    } catch (error) {
+        console.error('Erro no debug:', error);
+    }
+}
+
 // Inicializar automaticamente quando o módulo é carregado
 initializeDatabase();
