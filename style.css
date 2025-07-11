@@ -3124,6 +3124,29 @@ form legend {
     }
     
     /* Financial dashboard mobile optimization */
+    .financial-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .financial-header h2 {
+        font-size: 1.5rem;
+        margin: 0;
+    }
+    
+    .financial-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .financial-controls label {
+        margin-bottom: 8px;
+    }
+    
     .financial-summary-grid,
     .client-summary-grid {
         grid-template-columns: 1fr;
@@ -3307,6 +3330,32 @@ form legend {
     }
     .documents-filter select {
         width: 100%;
+    }
+
+    /* Financial header optimization for very small screens */
+    .financial-header {
+        margin-bottom: 20px;
+    }
+    
+    .financial-header h2 {
+        font-size: 1.4rem;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .financial-controls {
+        padding: 14px;
+        border-radius: var(--radius-md);
+    }
+    
+    .financial-controls label {
+        font-size: 0.9rem;
+    }
+    
+    .report-period-selector {
+        font-size: 16px;
+        padding: 12px;
+        min-height: 44px;
     }
 
     .report-section h3 {
